@@ -1,0 +1,984 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+}
+
+/* ================================
+   UIパーツの統一 - カスタムコンポーネント
+   ================================ */
+/* ヘッダーの基本スタイル */
+#header {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+}
+
+/* ドロップダウン */
+select{
+    width: 100% !important;
+    height: 2.5rem;
+    background: #fefefe;
+    border: solid 1px #aaaaaa;
+    border-radius: 10px;
+    padding: 2px 15px;
+	margin:3px;
+	}
+
+input[type="text"],input[type="date"],input[type="number"],input[type="email"],input[type="password"]{
+    width: 100% !important;
+    height: 2.5rem;
+    background: #fefefe;
+    border: solid 1px #aaaaaa;
+    border-radius: 10px;
+    padding: 2px 15px;
+	margin:3px;
+}
+
+textarea{
+    width: 100% !important;
+    background: #fefefe;
+    border: solid 1px #aaaaaa;
+    border-radius: 10px;
+    padding: 2px 15px;
+	margin:3px;
+}
+
+.notice{
+    font-size: 0.875rem;
+    color: #d20000;
+    margin-top: 0.5rem;
+}
+
+.notice2{
+    font-size: 0.875rem;
+    color: #2C3E50;
+    margin-top: 0.5rem;
+}
+
+/* マージン設定 */
+.ml10 {
+	margin-left: 10px;
+}
+
+.ml15 {
+	margin-left: 15px;
+}
+
+.ml20 {
+	margin-left: 20px;
+}
+
+.mr10 {
+	margin-right: 10px;
+}
+.mr15 {
+	margin-right: 15px;
+}
+.mr20 {
+	margin-right: 20px;
+}
+
+/* ボタンの基本スタイル */
+.btn-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    border: none;
+    cursor: pointer;
+	margin: 1px 2px;
+}
+
+.btn-base:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.btn-base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ボタンサイズ */
+.btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.btn-s {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.btn-m {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.btn-l {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.btn-xl {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+/* ボタンの種類 */
+.btn-create {
+    background-color: #7bb33d;
+    color: white;
+}
+
+.btn-create:hover:not(:disabled) {
+    background-color: #047857;
+    transform: scale(1.02);
+}
+
+.btn-update {
+    background-color: #43a1da;
+    color: #ffffff;
+}
+
+.btn-update:hover:not(:disabled) {
+    background-color: #3a88b8;
+    transform: scale(1.02);
+}
+
+.btn-back {
+    background-color: #d1d5db;
+    color: #374151;
+}
+
+.btn-back:hover:not(:disabled) {
+    background-color: #9ca3af;
+    transform: scale(1.02);
+}
+
+.btn-cancel {
+    background-color: #faa51a;
+    color: white;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #da7c0c;
+    transform: scale(1.02);
+}
+
+.btn-disable {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-disable:hover:not(:disabled) {
+    background-color: #b91c1c;
+    transform: scale(1.02);
+}
+
+.btn-disabled {
+    background-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.btn-search {
+    background-color: #2563eb;
+    color: white;
+}
+
+.btn-search:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    transform: scale(1.02);
+}
+
+.btn-duplicate {
+    background-color: #7c3aed;
+    color: white;
+}
+
+.btn-duplicate:hover:not(:disabled) {
+    background-color: #6d28d9;
+    transform: scale(1.02);
+}
+
+.btn-export {
+    background-color: #00bcd4;
+    color: white;
+}
+
+.btn-export:hover:not(:disabled) {
+    background-color: #0097a7;
+    transform: scale(1.02);
+}
+
+.btn-copy {
+    background-color: #ffffff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px -1px rgba(0, 0, 0, 0.12);
+}
+
+/* ホバーUIはホバー可能なデバイス（PC等）に限定する。
+   タッチデバイスでは :hover がタップ後に貼り付くため、適用しない。 */
+@media (hover: hover) {
+    .btn-copy:hover:not(:disabled) {
+        background-color: #374151;
+        color: #ffffff;
+        border-color: #374151;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.18), 0 2px 4px -2px rgba(0, 0, 0, 0.18);
+        transform: scale(1.02);
+    }
+}
+
+/* 押下中は「内側へへこむ影＋わずかな縮小」だけ（色反転はしない）。
+   タップは一瞬で終わるため色のトランジションが間延びして見えるのを避ける。 */
+.btn-copy:active:not(:disabled) {
+    transform: scale(0.99);
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* ラベルの基本スタイル */
+.label-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    border-radius: 9999px;
+    border-width: 1px;
+}
+
+/* ラベルサイズ */
+.label-xs {
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.label-s {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.label-m {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
+
+.label-l {
+    padding: 0.5rem 1rem;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+}
+
+.label-xl {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+/* ラベルの種類 */
+.label-active {
+    background-color: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.label-inactive {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.label-disable {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
+.label-pending {
+    background-color: #fefce8;
+    color: #a16207;
+    border-color: #fde047;
+}
+
+.label-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+.label-warning {
+    background-color: #fed7aa;
+    color: #c2410c;
+    border-color: #fdba74;
+}
+
+.label-neutral {
+    background-color: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.label-duplicate {
+    background-color: #f3e8ff;
+    color: #7c2d12;
+    border-color: #c4b5fd;
+}
+
+/* =================================
+   フォームフィールドコンポーネント
+   ================================= */
+
+/* フォームフィールドの基本スタイル */
+.field-base {
+    display: block;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    color: #111827;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.625rem 0.75rem;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.field-base:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: #ffffff;
+}
+
+.field-base:disabled {
+    background-color: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.field-base.error {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.field-base.error:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.field-base.duplicate {
+    border-color: #7c3aed;
+    background-color: #faf5ff;
+}
+
+.field-base.duplicate:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* フォームフィールドの横幅クラス（10%刻み） */
+.field-w-10 { width: 10%; }
+.field-w-20 { width: 20%; }
+.field-w-30 { width: 30%; }
+.field-w-40 { width: 40%; }
+.field-w-50 { width: 50%; }
+.field-w-60 { width: 60%; }
+.field-w-70 { width: 70%; }
+.field-w-80 { width: 80%; }
+.field-w-90 { width: 90%; }
+.field-w-100 { width: 100%; }
+
+/* レスポンシブ対応 - モバイルでは基本的に100%幅 */
+@media (max-width: 640px) {
+    .field-w-10,
+    .field-w-20,
+    .field-w-30,
+    .field-w-40,
+    .field-w-50,
+    .field-w-60,
+    .field-w-70,
+    .field-w-80,
+    .field-w-90 {
+        width: 100%;
+    }
+}
+
+/* フォームフィールド特殊タイプ */
+.field-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.field-select {
+    /* background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e"); */
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* テキストエリア要素 */
+.field-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.field-checkbox,
+.field-radio {
+    width: auto;
+    height: 1rem;
+    padding: 0;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.field-checkbox:checked,
+.field-radio:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.field-radio {
+    border-radius: 50%;
+}
+
+/* フォームラベルスタイル */
+.field-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    line-height: 1.25rem;
+}
+
+.field-label.required::before {
+    content: "必須";
+    color: #fff;
+    background-color: #dc2626;
+    border-color: #af1616;
+    font-weight: 500;
+    padding: 4px 10px;
+    font-size: 80%;
+    margin-right: 5px;
+    border-radius: 0.175rem;
+}
+
+/* フォームエラーメッセージ */
+.field-error {
+    display: block;
+    font-size: 0.75rem;
+    color: #dc2626;
+    margin-top: 0.25rem;
+    line-height: 1.25rem;
+}
+
+/* フィールドヘルプテキスト */
+.field-help {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+/* チェックボックスコンポーネント */
+.field-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.field-checkbox-input {
+    border-radius: 0.25rem;
+    border-color: #d1d5db;
+    color: #2563eb;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.field-checkbox-input:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-checkbox-label {
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+/* 情報パネルコンポーネント */
+.info-panel {
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.info-panel-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 0.75rem;
+}
+
+.info-item {
+    font-size: 0.875rem;
+}
+
+.info-label {
+    color: #6b7280;
+}
+
+.info-value {
+    color: #111827;
+}
+
+/* フィルターパネルコンポーネント */
+.filter-panel {
+    background-color: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* 読み取り専用フィールドコンポーネント */
+.field-readonly {
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+/* セクション分割コンポーネント */
+.section-divider {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 1rem;
+}
+
+/* フォームグループ（フィールド全体のコンテナ） */
+.field-group {
+    margin-bottom: 1.5rem;
+}
+
+.field-group.inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.field-group.inline .field-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+/* フォーム行レイアウト */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-row.cols-2 {
+    grid-template-columns: 1fr 3fr;
+}
+
+.form-row.cols-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-row.cols-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+/* レスポンシブ対応 - タブレット以下では1列に */
+@media (max-width: 768px) {
+    .form-row.cols-2,
+    .form-row.cols-3,
+    .form-row.cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================================
+   チェックボックス・ラジオボタンのスタイル
+   ================================ */
+
+/* チェックボックスの基本スタイル */
+.check-base {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.check-base:checked {
+    background-color: #7bb33d;
+    border-color: #7bb33d;
+}
+
+.check-base:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(123, 179, 61, 0.2);
+}
+
+.check-base:hover {
+    border-color: #7bb33d;
+}
+
+/* チェックボックス種類 */
+.check-normal {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.check-normal:checked {
+    background-color: #7bb33d;
+    border-color: #7bb33d;
+}
+
+.check-normal:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(123, 179, 61, 0.2);
+}
+
+.check-normal:hover {
+    border-color: #7bb33d;
+}
+
+.check-purple {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.check-purple:checked {
+    background-color: #9333ea;
+    border-color: #9333ea;
+}
+
+.check-purple:focus {
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+.check-purple:hover {
+    border-color: #9333ea;
+}
+
+.check-purple:checked {
+    background-color: #9333ea;
+    border-color: #9333ea;
+}
+
+.check-purple:focus {
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+.check-purple:hover {
+    border-color: #9333ea;
+}
+
+/* ラジオボタンの基本スタイル */
+.radio-base {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.radio-base:checked {
+    background-color: #7bb33d;
+    border-color: #7bb33d;
+}
+
+.radio-base:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(123, 179, 61, 0.2);
+}
+
+.radio-base:hover {
+    border-color: #7bb33d;
+}
+
+/* ラジオボタン種類 */
+.radio-normal {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.radio-normal:checked {
+    background-color: #7bb33d;
+    border-color: #7bb33d;
+}
+
+.radio-normal:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(123, 179, 61, 0.2);
+}
+
+.radio-normal:hover {
+    border-color: #7bb33d;
+}
+
+.radio-purple {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.radio-purple:checked {
+    background-color: #9333ea;
+    border-color: #9333ea;
+}
+
+.radio-purple:focus {
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+.radio-purple:hover {
+    border-color: #9333ea;
+}
+
+.radio-purple:checked {
+    background-color: #9333ea;
+    border-color: #9333ea;
+}
+
+.radio-purple:focus {
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+.radio-purple:hover {
+    border-color: #9333ea;
+}
+
+/* チェックボックス・ラジオボタンのラベルスタイル */
+.check-label,
+.radio-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.check-label:hover,
+.radio-label:hover {
+    color: #111827;
+}
+
+/* チェックボックスグループのスタイル */
+.check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.check-group.inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.check-item,
+.radio-item {
+    display: flex;
+    align-items: center;
+}
+
+/* 必須マーク */
+.check-required::after,
+.radio-required::after {
+    content: ' *';
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* ================================
+   アラートメッセージコンポーネント
+   ================================ */
+
+/* アラートの基本スタイル */
+.alert-base {
+    display: flex;
+    align-items: flex-start;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    position: relative;
+    transition: all 0.15s ease-in-out;
+}
+
+/* アラートサイズ */
+.alert-s {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.alert-m {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.alert-l {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+/* アラートの種類 */
+.alert-success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.alert-error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.alert-info {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+/* アラートアイコン */
+.alert-icon {
+    flex-shrink: 0;
+    margin-right: 0.75rem;
+    margin-top: 0.125rem;
+}
+
+.alert-success .alert-icon {
+    color: #059669;
+}
+
+.alert-error .alert-icon {
+    color: #dc2626;
+}
+
+.alert-info .alert-icon {
+    color: #2563eb;
+}
+
+/* アラートメッセージ */
+.alert-message {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+/* アラートクローズボタン */
+.alert-close {
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+    padding: 0.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+.alert-close:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    opacity: 1;
+}
+
+.alert-success .alert-close {
+    color: #059669;
+}
+
+.alert-error .alert-close {
+    color: #dc2626;
+}
+
+.alert-info .alert-close {
+    color: #2563eb;
+}
+
+/* ページ送り */
+#pagination ul {
+	display: flex;
+    justify-content: center;
+}
+#pagination li {
+	display: inline-block;
+	margin: 0 5px;
+}

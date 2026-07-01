@@ -1,0 +1,175 @@
+/* 習い事クーポン管理システム 共通CSS */
+
+/* カスタムカラーパレット */
+:root {
+    --primary-blue: #3b82f6;
+    --primary-green: #16a34a;
+    --secondary-gray: #6b7280;
+    --accent-yellow: #fbbf24;
+    --success-green: #10b981;
+    --error-red: #ef4444;
+}
+
+/* アニメーション */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ホバーエフェクト */
+.hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* カスタムボタンスタイル */
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #374151;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+    background-color: #d1d5db;
+}
+
+/* カード共通スタイル */
+.card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.card-hover:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* グラデーション背景 */
+.gradient-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+}
+
+.gradient-www {
+    background: linear-gradient(135deg, #16a34a 0%, #2563eb 100%);
+}
+
+/* レスポンシブテキスト */
+.text-responsive-xl {
+    font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .text-responsive-xl {
+        font-size: 1.875rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .text-responsive-xl {
+        font-size: 2.25rem;
+    }
+}
+
+.text-responsive-lg {
+    font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+    .text-responsive-lg {
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .text-responsive-lg {
+        font-size: 1.875rem;
+    }
+}
+
+/* アイコンスタイル */
+.icon-feature {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+}
+
+.icon-feature i {
+    font-size: 1.5rem;
+}
+
+/* セクション共通スタイル */
+.section-padding {
+    padding: 4rem 0;
+}
+
+.section-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.section-subtitle {
+    font-size: 1.125rem;
+    color: #4b5563;
+    max-width: 42rem;
+    margin: 0 auto;
+    text-align: center;
+}

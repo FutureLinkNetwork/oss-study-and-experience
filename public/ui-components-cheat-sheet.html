@@ -1,0 +1,605 @@
+
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIコンポーネント チートシート - 習い事クーポン管理システム</title>
+    <!-- CSSファイルはJavaScriptで動的に読み込み -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .component-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        .code-sample {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+        .grid-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .example-item {
+            text-align: center;
+            padding: 16px;
+            border: 1px dashed #d1d5db;
+            border-radius: 4px;
+        }
+        .size-comparison {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- ヘッダー -->
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">📚 UIコンポーネント チートシート</h1>
+            <p class="text-lg text-gray-600">習い事クーポン管理システム - カスタムTailwind CSSクラス一覧</p>
+            <div class="mt-6 text-sm text-gray-500">
+                <p>最終更新: 2025年10月16日 | モジュール式クラス設計 (btn-base + btn-[type] + btn-[size])</p>
+                <p class="text-xs mt-2">現在のCSSファイル: <span id="css-file-info" class="font-mono bg-gray-100 px-2 py-1 rounded">読み込み中...</span></p>
+            </div>
+        </header>
+
+        <!-- ボタンコンポーネント -->
+        <section class="component-section">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                <i class="fas fa-mouse-pointer text-blue-500 mr-2"></i>
+                ボタンコンポーネント
+            </h2>
+            
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">基本構造</h3>
+            <p class="text-gray-600 mb-4">すべてのボタンは <code class="bg-gray-100 px-2 py-1 rounded">btn-base</code> + タイプクラス + サイズクラスの組み合わせで構成されます。</p>
+            
+            <!-- ボタンタイプ -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">ボタンタイプ</h4>
+            <div class="grid-demo">
+                <div class="example-item">
+                    <button class="btn-base btn-create btn-m mb-2">
+                        <i class="fas fa-plus mr-2"></i>作成・追加
+                    </button>
+                    <div class="code-sample">btn-base btn-create btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">緑色 - 新規作成、追加処理用</p>
+                </div>
+                
+                <div class="example-item">
+                    <button class="btn-base btn-update btn-m mb-2">
+                        <i class="fas fa-edit mr-2"></i>更新・編集
+                    </button>
+                    <div class="code-sample">btn-base btn-update btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">黄色 - 編集、更新処理用</p>
+                </div>
+                
+                <div class="example-item">
+                    <button class="btn-base btn-back btn-m mb-2">
+                        <i class="fas fa-arrow-left mr-2"></i>戻る
+                    </button>
+                    <div class="code-sample">btn-base btn-back btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">グレー - 戻る、キャンセル用</p>
+                </div>
+                
+                <div class="example-item">
+                    <button class="btn-base btn-cancel btn-m mb-2">
+                        <i class="fas fa-times mr-2"></i>キャンセル
+                    </button>
+                    <div class="code-sample">btn-base btn-cancel btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">薄グレー - 中性的なキャンセル用</p>
+                </div>
+                
+                <div class="example-item">
+                    <button class="btn-base btn-disable btn-m mb-2">
+                        <i class="fas fa-ban mr-2"></i>無効化
+                    </button>
+                    <div class="code-sample">btn-base btn-disable btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">赤色 - 削除、無効化用</p>
+                </div>
+                
+                <div class="example-item">
+                    <button class="btn-base btn-search btn-m mb-2">
+                        <i class="fas fa-search mr-2"></i>検索
+                    </button>
+                    <div class="code-sample">btn-base btn-search btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">青色 - 検索、実行用</p>
+                </div>
+            </div>
+
+            <!-- ボタンサイズ -->
+            <h4 class="text-md font-medium text-gray-700 mb-3 mt-8">ボタンサイズ比較</h4>
+            <div class="size-comparison">
+                <button class="btn-base btn-create btn-xs">
+                    <i class="fas fa-plus mr-1"></i>XS
+                </button>
+                <button class="btn-base btn-create btn-s">
+                    <i class="fas fa-plus mr-1"></i>Small
+                </button>
+                <button class="btn-base btn-create btn-m">
+                    <i class="fas fa-plus mr-2"></i>Medium
+                </button>
+                <button class="btn-base btn-create btn-l">
+                    <i class="fas fa-plus mr-2"></i>Large
+                </button>
+                <button class="btn-base btn-create btn-xl">
+                    <i class="fas fa-plus mr-2"></i>Extra Large
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+                <div class="text-center">
+                    <div class="code-sample">btn-xs</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.25rem 0.5rem<br>font-size: 0.75rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">btn-s</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.375rem 0.75rem<br>font-size: 0.875rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">btn-m</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.5rem 1rem<br>font-size: 0.875rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">btn-l</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.75rem 1.5rem<br>font-size: 1rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">btn-xl</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 1rem 2rem<br>font-size: 1.125rem</p>
+                </div>
+            </div>
+
+            <!-- 無効状態 -->
+            <h4 class="text-md font-medium text-gray-700 mb-3 mt-8">無効状態</h4>
+            <div class="size-comparison">
+                <button class="btn-base btn-create btn-m" disabled>
+                    <i class="fas fa-plus mr-2"></i>無効状態
+                </button>
+                <button class="btn-base btn-disabled btn-m">
+                    <i class="fas fa-ban mr-2"></i>無効専用
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="text-center">
+                    <div class="code-sample">disabled属性使用</div>
+                    <p class="text-xs text-gray-500 mt-1">opacity: 0.5, cursor: not-allowed</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">btn-disabled</div>
+                    <p class="text-xs text-gray-500 mt-1">専用スタイル（グレーアウト）</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ラベルコンポーネント -->
+        <section class="component-section">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                <i class="fas fa-tags text-green-500 mr-2"></i>
+                ラベルコンポーネント
+            </h2>
+            
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">基本構造</h3>
+            <p class="text-gray-600 mb-4">すべてのラベルは <code class="bg-gray-100 px-2 py-1 rounded">label-base</code> + タイプクラス + サイズクラスの組み合わせで構成されます。</p>
+            
+            <!-- ラベルタイプ -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">ラベルタイプ</h4>
+            <div class="grid-demo">
+                <div class="example-item">
+                    <span class="label-base label-active label-m mb-2">有効</span>
+                    <div class="code-sample">label-base label-active label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">緑色 - アクティブ、有効状態</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-inactive label-m mb-2">無効</span>
+                    <div class="code-sample">label-base label-inactive label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">赤色 - 非アクティブ、無効状態</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-disable label-m mb-2">停止</span>
+                    <div class="code-sample">label-base label-disable label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">グレー - 無効化、停止状態</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-pending label-m mb-2">保留中</span>
+                    <div class="code-sample">label-base label-pending label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">黄色 - 保留、待機状態</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-info label-m mb-2">情報</span>
+                    <div class="code-sample">label-base label-info label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">青色 - 情報、通知用</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-warning label-m mb-2">警告</span>
+                    <div class="code-sample">label-base label-warning label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">オレンジ色 - 警告、注意用</p>
+                </div>
+                
+                <div class="example-item">
+                    <span class="label-base label-neutral label-m mb-2">中立</span>
+                    <div class="code-sample">label-base label-neutral label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">中性グレー - 中立、一般用</p>
+                </div>
+            </div>
+
+            <!-- ラベルサイズ -->
+            <h4 class="text-md font-medium text-gray-700 mb-3 mt-8">ラベルサイズ比較</h4>
+            <div class="size-comparison">
+                <span class="label-base label-active label-xs">XS</span>
+                <span class="label-base label-active label-s">Small</span>
+                <span class="label-base label-active label-m">Medium</span>
+                <span class="label-base label-active label-l">Large</span>
+                <span class="label-base label-active label-xl">Extra Large</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+                <div class="text-center">
+                    <div class="code-sample">label-xs</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.125rem 0.5rem<br>font-size: 0.75rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">label-s</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.25rem 0.625rem<br>font-size: 0.75rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">label-m</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.375rem 0.75rem<br>font-size: 0.875rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">label-l</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.5rem 1rem<br>font-size: 1rem</p>
+                </div>
+                <div class="text-center">
+                    <div class="code-sample">label-xl</div>
+                    <p class="text-xs text-gray-500 mt-1">padding: 0.75rem 1.5rem<br>font-size: 1.125rem</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- フォームフィールドコンポーネント -->
+        <section class="component-section">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                <i class="fas fa-edit text-indigo-500 mr-2"></i>
+                フォームフィールドコンポーネント
+            </h2>
+            
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">基本構造</h3>
+            <p class="text-gray-600 mb-4">すべてのフォームフィールドは <code class="bg-gray-100 px-2 py-1 rounded">field-base</code> + 横幅クラス + タイプクラスの組み合わせで構成されます。</p>
+            
+            <!-- フィールドタイプ -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">フィールドタイプ</h4>
+            <div class="grid-demo">
+                <div class="example-item">
+                    <input type="text" class="field-base field-w-100 mb-2" placeholder="テキストフィールド">
+                    <div class="code-sample">field-base field-w-100</div>
+                    <p class="text-xs text-gray-500 mt-1">基本のテキストフィールド</p>
+                </div>
+                
+                <div class="example-item">
+                    <select class="field-base field-select field-w-100 mb-2">
+                        <option>セレクトボックス</option>
+                        <option>オプション1</option>
+                    </select>
+                    <div class="code-sample">field-base field-select field-w-100</div>
+                    <p class="text-xs text-gray-500 mt-1">セレクトボックス（矢印付き）</p>
+                </div>
+                
+                <div class="example-item">
+                    <textarea class="field-base field-textarea field-w-100 mb-2" placeholder="テキストエリア" rows="3"></textarea>
+                    <div class="code-sample">field-base field-textarea field-w-100</div>
+                    <p class="text-xs text-gray-500 mt-1">複数行テキストエリア</p>
+                </div>
+                
+                <div class="example-item">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <input type="checkbox" class="field-checkbox" id="demo-check">
+                        <label for="demo-check" class="field-label mb-0">チェックボックス</label>
+                    </div>
+                    <div class="code-sample">field-checkbox</div>
+                    <p class="text-xs text-gray-500 mt-1">チェックボックス</p>
+                </div>
+                
+                <div class="example-item">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <input type="radio" class="field-radio" id="demo-radio" name="demo">
+                        <label for="demo-radio" class="field-label mb-0">ラジオボタン</label>
+                    </div>
+                    <div class="code-sample">field-radio</div>
+                    <p class="text-xs text-gray-500 mt-1">ラジオボタン</p>
+                </div>
+                
+                <div class="example-item">
+                    <input type="text" class="field-base field-w-100 error mb-2" value="エラー状態">
+                    <span class="field-error">エラーメッセージ</span>
+                    <div class="code-sample">field-base field-w-100 error</div>
+                    <p class="text-xs text-gray-500 mt-1">エラー状態（赤色）</p>
+                </div>
+            </div>
+
+            <!-- 横幅クラス -->
+            <h4 class="text-md font-medium text-gray-700 mb-3 mt-8">横幅クラス（10%刻み）</h4>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-mono w-16">10%:</span>
+                    <input type="text" class="field-base field-w-10" placeholder="10%">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-mono w-16">30%:</span>
+                    <input type="text" class="field-base field-w-30" placeholder="30%">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-mono w-16">50%:</span>
+                    <input type="text" class="field-base field-w-50" placeholder="50%">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-mono w-16">70%:</span>
+                    <input type="text" class="field-base field-w-70" placeholder="70%">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-mono w-16">100%:</span>
+                    <input type="text" class="field-base field-w-100" placeholder="100%">
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h5 class="font-medium text-blue-900 mb-2">利用可能な横幅クラス</h5>
+                <p class="text-sm text-blue-800 font-mono">field-w-10, field-w-20, field-w-30, field-w-40, field-w-50, field-w-60, field-w-70, field-w-80, field-w-90, field-w-100</p>
+                <p class="text-xs text-blue-700 mt-2">📱 モバイル（640px以下）では field-w-10 〜 field-w-90 はすべて100%幅になります</p>
+            </div>
+
+            <!-- フォームレイアウト -->
+            <h4 class="text-md font-medium text-gray-700 mb-3 mt-8">フォームレイアウト</h4>
+            <div class="space-y-4">
+                <div>
+                    <h5 class="text-sm font-medium text-gray-600 mb-2">2列レイアウト</h5>
+                    <div class="form-row cols-2">
+                        <div class="field-group">
+                            <label class="field-label required">姓</label>
+                            <input type="text" class="field-base field-w-100" placeholder="田中">
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label required">名</label>
+                            <input type="text" class="field-base field-w-100" placeholder="太郎">
+                        </div>
+                    </div>
+                    <div class="code-sample mt-2">form-row cols-2</div>
+                </div>
+                
+                <div>
+                    <h5 class="text-sm font-medium text-gray-600 mb-2">3列レイアウト</h5>
+                    <div class="form-row cols-3">
+                        <input type="text" class="field-base field-w-100" placeholder="郵便番号">
+                        <select class="field-base field-select field-w-100">
+                            <option>都道府県</option>
+                        </select>
+                        <input type="text" class="field-base field-w-100" placeholder="市区町村">
+                    </div>
+                    <div class="code-sample mt-2">form-row cols-3</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 実際の使用例 -->
+        <section class="component-section">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                <i class="fas fa-code text-purple-500 mr-2"></i>
+                実際の使用例
+            </h2>
+            
+            <!-- テーブル行アクション -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">テーブル行アクション</h4>
+            <div class="bg-white border rounded-lg overflow-hidden mb-6">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">事業者名</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ステータス</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                株式会社サンプル
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="label-base label-active label-xs">有効</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="#" class="btn-base btn-update btn-xs">
+                                        <i class="fas fa-edit mr-1"></i>編集
+                                    </a>
+                                    <button class="btn-base btn-disable btn-xs">
+                                        <i class="fas fa-times mr-1"></i>無効化
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                個人事業主 田中
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="label-base label-disable label-xs">無効</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="#" class="btn-base btn-update btn-xs">
+                                        <i class="fas fa-edit mr-1"></i>編集
+                                    </a>
+                                    <button class="btn-base btn-create btn-xs">
+                                        <i class="fas fa-check mr-1"></i>有効化
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- フォームボタン -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">フォームボタン</h4>
+            <div class="bg-white border rounded-lg p-6 mb-6">
+                <div class="flex justify-end space-x-4">
+                    <a href="#" class="btn-base btn-back btn-m">
+                        <i class="fas fa-arrow-left mr-2"></i>戻る
+                    </a>
+                    <button type="button" class="btn-base btn-cancel btn-m">
+                        <i class="fas fa-times mr-2"></i>キャンセル
+                    </button>
+                    <button type="submit" class="btn-base btn-create btn-m">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                </div>
+            </div>
+
+            <!-- ページヘッダー -->
+            <h4 class="text-md font-medium text-gray-700 mb-3">ページヘッダー</h4>
+            <div class="bg-white border rounded-lg p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">事業者管理</h1>
+                        <p class="mt-1 text-gray-600">登録されている事業者の一覧と管理</p>
+                    </div>
+                    <a href="#" class="btn-base btn-create btn-m">
+                        <i class="fas fa-plus mr-2"></i>新規事業者登録
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CSS設定情報 -->
+        <section class="component-section">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                <i class="fas fa-cog text-gray-500 mr-2"></i>
+                CSS設定情報
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">ファイル構成</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <ul class="space-y-2 text-sm">
+                            <li><strong>ソース:</strong> <code>resources/css/app.css</code></li>
+                            <li><strong>ビルド:</strong> <code>public/build/assets/app-[hash].css</code></li>
+                            <li><strong>設定:</strong> <code>vite.config.js</code></li>
+                            <li><strong>テンプレート:</strong> <code>resources/views/layouts/app.blade.php</code></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">ビルドコマンド</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <ul class="space-y-2 text-sm font-mono">
+                            <li><strong>開発:</strong> npm run dev</li>
+                            <li><strong>本番:</strong> npm run build</li>
+                            <li><strong>監視:</strong> npm run watch</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <h4 class="text-md font-medium text-gray-700 mb-3">カスタマイズ方法</h4>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <ol class="list-decimal list-inside space-y-2 text-sm">
+                        <li><code>resources/css/app.css</code> でクラスを編集</li>
+                        <li><code>npm run build</code> でCSSをリビルド</li>
+                        <li>ブラウザでリロードして変更を確認</li>
+                        <li>必要に応じて新しいタイプやサイズを追加</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- フッター -->
+        <footer class="text-center py-8 border-t border-gray-200 mt-12">
+            <p class="text-gray-500 text-sm">
+                © 2025 習い事クーポン管理システム | 
+                モジュール式UIコンポーネント設計 | 
+                <a href="/ui-cheat-sheet.php" class="text-blue-500 hover:underline">PHP動的版</a> |
+                <a href="/form-fields-test.html" class="text-blue-500 hover:underline">フォームテスト</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- スクロール位置表示 -->
+    <div class="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-3 text-xs text-gray-500">
+        <i class="fas fa-info-circle mr-1"></i>
+        <span id="scroll-info">チートシート</span>
+    </div>
+
+    <script>
+        // スクロール位置に応じてセクション名を表示
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section');
+            const scrollInfo = document.getElementById('scroll-info');
+            let currentSection = 'チートシート';
+            
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 100 && rect.bottom > 100) {
+                    const h2 = section.querySelector('h2');
+                    if (h2) {
+                        currentSection = h2.textContent.replace(/.*\s/, '');
+                    }
+                }
+            });
+            
+            scrollInfo.textContent = currentSection;
+        });
+
+        // 動的にCSSファイルを読み込み
+        async function loadDynamicCSS() {
+            try {
+                const response = await fetch('/build/manifest.json');
+                const manifest = await response.json();
+                const cssFile = manifest['resources/css/app.css']?.file;
+                
+                if (cssFile) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = `/build/${cssFile}`;
+                    document.head.appendChild(link);
+                    
+                    // 現在読み込まれているCSSファイル名を表示
+                    const cssInfo = document.getElementById('css-file-info');
+                    if (cssInfo) {
+                        cssInfo.textContent = cssFile;
+                    }
+                }
+            } catch (error) {
+                console.error('CSSファイルの読み込みに失敗しました:', error);
+                // フォールバック: デフォルトのCSSを読み込み
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/build/assets/app.css';
+                document.head.appendChild(link);
+            }
+        }
+
+        // ページ読み込み時にCSSを動的読み込み
+        loadDynamicCSS();
+    </script>
+</body>
+</html>
