@@ -138,7 +138,7 @@ Route::prefix('business')->name('business.')->group(function () {
     Route::post('/reset', [BusinessPasswordResetController::class, 'reset'])->name('reset');
 
     // 事業者ダッシュボード（認証が必要・サブドメイン事業者のみ）
-    Route::middleware(['auth', 'role:subdomain_business'])->group(function () {
+    Route::middleware(['auth', 'role:subdomain_business', 'require.password.change:business.password.change'])->group(function () {
         Route::get('/', [BusinessDashboardController::class, 'index'])->name('dashboard');
 
         // パスワード変更（初回ログイン時）
@@ -206,7 +206,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // 利用者ダッシュボード（認証が必要・サブドメイン利用者のみ）
-Route::middleware(['auth', 'role:subdomain_user'])->prefix('user')->name('user.')->group(function () {
+Route::middleware(['auth', 'role:subdomain_user', 'require.password.change:user.password.change'])->prefix('user')->name('user.')->group(function () {
     Route::get('/', [UserDashboardController::class, 'index'])->name('dashboard');
 
     // パスワード変更（初回ログイン時）
