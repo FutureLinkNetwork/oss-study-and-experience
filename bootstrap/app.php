@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'basic.auth' => \App\Http\Middleware\BasicAuth::class,
             'clear.auth' => \App\Http\Middleware\ClearPreviousAuth::class,
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'require.password.change' => \App\Http\Middleware\EnsurePasswordChanged::class,
             'validate.form.session' => \App\Http\Middleware\ValidateFormSession::class,
         ]);
     })
@@ -61,7 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('app:export-inquiry-csv-monthly')
             ->monthlyOn(1, '00:03')
             // ->everyMinute()
-			->timezone('Asia/Tokyo');
+            ->timezone('Asia/Tokyo');
 
         // 決定通知書送信待ちの利用者にメールを送信する（5分毎バッチ）
         $schedule->command('app:send-pending-decision-notices')

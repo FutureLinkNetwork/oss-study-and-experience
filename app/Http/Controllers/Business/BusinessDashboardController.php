@@ -21,11 +21,6 @@ class BusinessDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 初回ログイン（last_login_atがnull）の場合はパスワード変更画面へ
-        if ($user->last_login_at === null) {
-            return redirect()->route('business.password.change');
-        }
-
         // 事業者ロールでない場合はログアウト
         if ($user->role->name !== 'subdomain_business') {
             Auth::logout();
