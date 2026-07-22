@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BeneficiaryImportRequest;
 use App\Http\Requests\Admin\BeneficiaryUpdateRequest;
+use App\Http\Requests\Admin\SendBulkLoginInfoRequest;
 use App\Models\Beneficiary;
 use App\Models\Role;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Services\BeneficiaryCsvExportService;
 use App\Services\MailLogService;
 use App\Services\PdfTemplateService;
 use App\Services\SubdomainService;
+use App\Services\VoucherIssueService;
 use App\Support\FiscalYear;
 use App\Support\UserCouponBalanceCalculator;
 use Illuminate\Http\JsonResponse;
@@ -31,21 +33,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BeneficiaryController extends Controller
 {
-    protected MailLogService $mailLogService;
-
-    protected PdfTemplateService $pdfTemplateService;
-
-    protected BeneficiaryCsvExportService $beneficiaryCsvExportService;
-
     public function __construct(
-        MailLogService $mailLogService,
-        PdfTemplateService $pdfTemplateService,
-        BeneficiaryCsvExportService $beneficiaryCsvExportService
-    ) {
-        $this->mailLogService = $mailLogService;
-        $this->pdfTemplateService = $pdfTemplateService;
-        $this->beneficiaryCsvExportService = $beneficiaryCsvExportService;
-    }
+        protected MailLogService $mailLogService,
+        protected PdfTemplateService $pdfTemplateService,
+        protected BeneficiaryCsvExportService $beneficiaryCsvExportService,
+        protected VoucherIssueService $voucherIssueService
+    ) {}
 
     /**
      * 利用者一覧表示
@@ -718,7 +711,7 @@ class BeneficiaryController extends Controller
     /**
      * メール一括送信
      */
-    public function sendBulkLoginInfo(Request $request): RedirectResponse
+    public function sendBulkLoginInfo(SendBulkLoginInfoRequest $request): RedirectResponse
     {
         // 認証チェック
         if (! Auth::check()) {
@@ -741,33 +734,22 @@ class BeneficiaryController extends Controller
             abort(404);
         }
 
-        // ステータスが「決定通知書未送信」で検索した現在の検索条件を適用して利用者を取得
-        $query = Beneficiary::where('subdomain_id', $subdomain->id)
-            ->where('status', '決定通知書未送信');
+        $shouldIssueVoucher = $request->shouldIssueVoucher();
 
-        // 他の検索条件も適用（indexメソッドと同じロジック）
-        if ($request->filled('certification_number')) {
-            $query->where('certification_number', 'like', '%'.$request->certification_number.'%');
+        if ($shouldIssueVoucher && ($subdomain->voucher_amount === null || $subdomain->voucher_expiry === null)) {
+            return redirect()->route('admin.beneficiaries.index', $request->only([
+                'child_id',
+                'certification_number',
+                'guardian_name',
+                'child_name',
+                'status',
+                'labels',
+            ]))->with('error', 'サブドメインのクーポン設定が完了していません。クーポン付与を外すか、設定を完了してください。');
         }
 
-        if ($request->filled('guardian_name')) {
-            $query->where('guardian_name', 'like', '%'.$request->guardian_name.'%');
-        }
-
-        if ($request->filled('child_name')) {
-            $query->where('child_name', 'like', '%'.$request->child_name.'%');
-        }
-
-        // ラベル検索（複数選択可能）
-        if ($request->filled('labels') && is_array($request->labels)) {
-            foreach ($request->labels as $label) {
-                if (! empty($label)) {
-                    $query->where('labels', 'like', '%'.$label.'%');
-                }
-            }
-        }
-
-        $beneficiaries = $query->get();
+        // 一覧と同じ検索条件を適用し、対象は常に「決定通知書未送信」に限定
+        $request->merge(['status' => '決定通知書未送信']);
+        $beneficiaries = $this->buildIndexQuery($request, $subdomain)->get();
 
         if ($beneficiaries->isEmpty()) {
             return redirect()->route('admin.beneficiaries.index')
@@ -776,11 +758,19 @@ class BeneficiaryController extends Controller
 
         $count = $beneficiaries->count();
         foreach ($beneficiaries as $beneficiary) {
-            $beneficiary->update(['status' => '決定通知書送信待ち']);
+            $beneficiary->update([
+                'status' => '決定通知書送信待ち',
+                'pending_voucher_issue' => $shouldIssueVoucher,
+            ]);
+        }
+
+        $message = "{$count}件をメール送信待ちに登録しました。5分以内にバッチで送信されます。";
+        if ($shouldIssueVoucher) {
+            $message .= '送信成功時にクーポンを付与します。';
         }
 
         return redirect()->route('admin.beneficiaries.index')
-            ->with('success', "{$count}件をメール送信待ちに登録しました。5分以内にバッチで送信されます。");
+            ->with('success', $message);
     }
 
     /**
@@ -828,35 +818,7 @@ class BeneficiaryController extends Controller
 
         try {
             DB::transaction(function () use ($beneficiary, $subdomain) {
-                $today = Carbon::today();
-
-                // 有効期限を計算
-                if ($subdomain->voucher_expiry === 0) {
-                    // voucher_expiryが0の場合は年度末（3月31日）を設定
-                    // 年度は4月1日から3月31日まで
-                    // 発行日が4月以降ならその年度の年度末（翌年の3月31日）、1-3月ならその年度の年度末（その年の3月31日）
-                    if ($today->month >= 4) {
-                        // 4月以降：その年度の年度末は翌年の3月31日
-                        $expiryDate = Carbon::create($today->year + 1, 3, 31);
-                    } else {
-                        // 1-3月：その年度の年度末はその年の3月31日
-                        $expiryDate = Carbon::create($today->year, 3, 31);
-                    }
-                } else {
-                    // 従来通り、発行日からvoucher_expiryヶ月後
-                    $expiryDate = $today->copy()->addMonths($subdomain->voucher_expiry);
-                }
-
-                // クーポンを作成
-                Voucher::create([
-                    'beneficiary_id' => $beneficiary->id,
-                    'subdomain_id' => $subdomain->id,
-                    'voucher_number' => Str::uuid()->toString(),
-                    'issue_date' => $today,
-                    'expiry_date' => $expiryDate,
-                    'amount' => $subdomain->voucher_amount,
-                    'status' => 'unused',
-                ]);
+                $this->voucherIssueService->issueForBeneficiary($beneficiary, $subdomain);
             });
 
             Log::info('Voucher issued manually', [

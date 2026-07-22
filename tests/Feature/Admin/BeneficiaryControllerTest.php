@@ -208,10 +208,122 @@ class BeneficiaryControllerTest extends TestCase
         $this->assertDatabaseHas('beneficiaries', [
             'id' => $beneficiary1->id,
             'status' => '決定通知書送信待ち',
+            'pending_voucher_issue' => false,
         ]);
         $this->assertDatabaseHas('beneficiaries', [
             'id' => $beneficiary2->id,
             'status' => '決定通知書送信待ち',
+            'pending_voucher_issue' => false,
+        ]);
+    }
+
+    /**
+     * クーポン付与チェックONで送信待ち登録し、pending_voucher_issue が立つことをテスト
+     */
+    public function test_send_bulk_login_info_with_issue_voucher_sets_pending_flag(): void
+    {
+        $this->subdomain->update([
+            'voucher_amount' => 10000,
+            'voucher_expiry' => 6,
+        ]);
+
+        $beneficiary = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'user_id' => null,
+            'status' => '決定通知書未送信',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post('http://test.localhost/admin/beneficiaries/send-bulk-login-info', [
+                'status' => '決定通知書未送信',
+                'issue_voucher' => '1',
+                '_token' => csrf_token(),
+            ]);
+
+        $response->assertRedirect('http://test.localhost/admin/beneficiaries');
+        $response->assertSessionHas('success');
+        $this->assertStringContainsString('クーポンを付与', session('success'));
+
+        $this->assertDatabaseHas('beneficiaries', [
+            'id' => $beneficiary->id,
+            'status' => '決定通知書送信待ち',
+            'pending_voucher_issue' => true,
+        ]);
+    }
+
+    /**
+     * クーポン設定未完了でクーポン付与チェックONの場合は一括送信を中止する
+     */
+    public function test_send_bulk_login_info_with_issue_voucher_fails_when_settings_missing(): void
+    {
+        $this->subdomain->update([
+            'voucher_amount' => null,
+            'voucher_expiry' => null,
+        ]);
+
+        $beneficiary = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'user_id' => null,
+            'status' => '決定通知書未送信',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->from('http://test.localhost/admin/beneficiaries?status='.urlencode('決定通知書未送信'))
+            ->post('http://test.localhost/admin/beneficiaries/send-bulk-login-info', [
+                'status' => '決定通知書未送信',
+                'issue_voucher' => '1',
+                '_token' => csrf_token(),
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+
+        $this->assertDatabaseHas('beneficiaries', [
+            'id' => $beneficiary->id,
+            'status' => '決定通知書未送信',
+            'pending_voucher_issue' => false,
+        ]);
+    }
+
+    /**
+     * 一括送信が検索条件（guardian_name / child_id）を反映することをテスト
+     */
+    public function test_send_bulk_login_info_applies_search_filters(): void
+    {
+        $matched = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'user_id' => null,
+            'status' => '決定通知書未送信',
+            'guardian_name' => '対象保護者',
+            'child_id' => 'CHILD-MATCH',
+        ]);
+
+        $unmatchedByName = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'user_id' => null,
+            'status' => '決定通知書未送信',
+            'guardian_name' => '別の保護者',
+            'child_id' => 'CHILD-OTHER',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post('http://test.localhost/admin/beneficiaries/send-bulk-login-info', [
+                'status' => '決定通知書未送信',
+                'guardian_name' => '対象保護者',
+                'child_id' => 'CHILD-MATCH',
+                '_token' => csrf_token(),
+            ]);
+
+        $response->assertRedirect('http://test.localhost/admin/beneficiaries');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('beneficiaries', [
+            'id' => $matched->id,
+            'status' => '決定通知書送信待ち',
+        ]);
+        $this->assertDatabaseHas('beneficiaries', [
+            'id' => $unmatchedByName->id,
+            'status' => '決定通知書未送信',
         ]);
     }
 

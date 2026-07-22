@@ -47,6 +47,7 @@ class Beneficiary extends Model
         'application_date',
         'certification_date',
         'status',
+        'pending_voucher_issue',
         'system_message',
         'disqualification_date',
         'labels',
@@ -64,6 +65,7 @@ class Beneficiary extends Model
             'child_address_same_as_guardian' => 'boolean',
             'child_registered_in_municipality_and_receiving_scholarship' => 'boolean',
             'survey_consent' => 'boolean',
+            'pending_voucher_issue' => 'boolean',
         ];
     }
 
