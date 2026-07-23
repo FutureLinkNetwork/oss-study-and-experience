@@ -403,6 +403,7 @@
 | 申請日 | application_date | DATE | NO | - | |
 | 資格喪失日 | disqualification_date | DATE | YES | NULL | |
 | ステータス | status | VARCHAR(50) | NO | 決定通知書未送信 | 例: 資格喪失 |
+| 決定通知成功時クーポン付与待ち | pending_voucher_issue | BOOLEAN | NO | false | メール一括送信時にON。送信成功時にクーポン付与してOFF |
 | システムメッセージ | system_message | TEXT | YES | NULL | 失敗理由等 |
 | ラベル | labels | VARCHAR(255) | YES | NULL | カンマ区切り |
 | 備考 | remarks | TEXT | YES | NULL | 運営者備考（管理者画面で編集） |
@@ -602,3 +603,4 @@
 - 初版: マイグレーション（2026年3月時点）に基づき作成
 - 2026-03: admin_downloads に download_type 追加（お問い合わせCSV月次バッチ用）
 - 2026-03: admin_downloads.download_type に inquiry（問い合わせ・利用者・事業者CSV月次）を追記
+- 2026-07: beneficiaries に pending_voucher_issue 追加（決定通知メール成功時のクーポン付与フラグ）

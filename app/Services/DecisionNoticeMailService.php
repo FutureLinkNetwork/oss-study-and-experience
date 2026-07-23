@@ -11,18 +11,21 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class DecisionNoticeMailService
 {
     public function __construct(
         protected MailLogService $mailLogService,
-        protected PdfTemplateService $pdfTemplateService
+        protected PdfTemplateService $pdfTemplateService,
+        protected VoucherIssueService $voucherIssueService
     ) {}
 
     /**
      * 決定通知書メールを1件送信する。
      * 成功時は beneficiary の status を「決定通知書送信済」に更新し true を返す。
      * 失敗・スキップ時は system_message に理由を保存し status を「決定通知書送信失敗」に更新して false を返す。
+     * pending_voucher_issue が true の場合、メール送信成功時にクーポンを付与する。
      */
     public function sendDecisionNotice(Beneficiary $beneficiary, Subdomain $subdomain): bool
     {
@@ -109,8 +112,8 @@ class DecisionNoticeMailService
             $body = sprintf(
                 "%s 様\n\n".
                 "%sのログイン情報をお知らせいたします。\n\n".
-				"添付されている交付決定通知書に記載の注意事項等をご確認の上、ご利用ください。\n".
-				"なお、本メールはクーポンの交付決定のご連絡となります。習い事の申し込み状況等は、事前に各教室へ直接ご連絡ください。\n\n".	
+                "添付されている交付決定通知書に記載の注意事項等をご確認の上、ご利用ください。\n".
+                "なお、本メールはクーポンの交付決定のご連絡となります。習い事の申し込み状況等は、事前に各教室へ直接ご連絡ください。\n\n".
                 "ログインID: %s\n".
                 "パスワード: %s\n\n".
                 "ログインURL: %s\n\n".
@@ -125,6 +128,8 @@ class DecisionNoticeMailService
                 $loginUrl,
             );
 
+            $shouldIssueVoucher = (bool) $beneficiary->pending_voucher_issue;
+
             DB::transaction(function () use (
                 $beneficiary,
                 $subdomain,
@@ -133,7 +138,8 @@ class DecisionNoticeMailService
                 $subject,
                 $body,
                 $systemName,
-                $tempPdfPath
+                $tempPdfPath,
+                $shouldIssueVoucher
             ) {
                 $newUser = User::create([
                     'subdomain_id' => $subdomain->id,
@@ -147,6 +153,17 @@ class DecisionNoticeMailService
                 ]);
 
                 $beneficiary->update(['user_id' => $newUser->id]);
+
+                if ($shouldIssueVoucher) {
+                    try {
+                        $this->voucherIssueService->issueForBeneficiary($beneficiary, $subdomain);
+                    } catch (InvalidArgumentException $e) {
+                        Log::warning('決定通知メール成功時のクーポン付与をスキップしました', [
+                            'beneficiary_id' => $beneficiary->id,
+                            'reason' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 Mail::raw($body, function ($message) use ($beneficiary, $subject, $systemName, $tempPdfPath) {
                     $message->to($beneficiary->guardian_email)
@@ -166,6 +183,7 @@ class DecisionNoticeMailService
                 $beneficiary->update([
                     'status' => '決定通知書送信済',
                     'system_message' => '',
+                    'pending_voucher_issue' => false,
                 ]);
             });
 
@@ -202,6 +220,7 @@ class DecisionNoticeMailService
         $beneficiary->update([
             'status' => '決定通知書送信失敗',
             'system_message' => $reason,
+            'pending_voucher_issue' => false,
         ]);
     }
 

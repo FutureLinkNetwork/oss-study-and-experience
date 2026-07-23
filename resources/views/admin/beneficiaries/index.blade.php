@@ -208,12 +208,37 @@
                             メール送信処理中
                         </span>
                     @elseif($isStatusNotSentSearch && $hasResults)
-                        <form method="POST" action="{{ route('admin.beneficiaries.send-bulk-login-info') }}" class="inline" onsubmit="return confirm('決定通知書未送信の利用者にログイン情報を一括送信しますか？');">
+                        <form method="POST" action="{{ route('admin.beneficiaries.send-bulk-login-info') }}" class="inline-flex items-center gap-3" onsubmit="return confirmBulkLoginInfoSend(this);">
                             @csrf
+                            @foreach(['child_id', 'certification_number', 'guardian_name', 'child_name', 'status'] as $filterKey)
+                                @if(!empty($filters[$filterKey]))
+                                    <input type="hidden" name="{{ $filterKey }}" value="{{ $filters[$filterKey] }}">
+                                @endif
+                            @endforeach
+                            @if(!empty($filters['labels']) && is_array($filters['labels']))
+                                @foreach($filters['labels'] as $label)
+                                    @if($label !== null && $label !== '')
+                                        <input type="hidden" name="labels[]" value="{{ $label }}">
+                                    @endif
+                                @endforeach
+                            @endif
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="issue_voucher" value="1" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                クーポン付与
+                            </label>
                             <button type="submit" class="btn-base btn-update btn-m">
                                 <i class="fas fa-envelope mr-2"></i>メール一括送信
                             </button>
                         </form>
+                        <script>
+                            function confirmBulkLoginInfoSend(form) {
+                                const issueVoucher = form.querySelector('input[name="issue_voucher"]')?.checked;
+                                const message = issueVoucher
+                                    ? '決定通知書未送信の利用者にログイン情報を一括送信し、送信成功時にクーポンを付与しますか？'
+                                    : '決定通知書未送信の利用者にログイン情報を一括送信しますか？';
+                                return confirm(message);
+                            }
+                        </script>
                     @endif
                 </div>
                 <div class="p-6">

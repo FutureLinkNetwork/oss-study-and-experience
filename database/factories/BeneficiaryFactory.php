@@ -47,6 +47,7 @@ class BeneficiaryFactory extends Factory
             'application_date' => fake()->date(),
             'certification_date' => fake()->date(),
             'status' => '決定通知書未送信',
+            'pending_voucher_issue' => false,
             'disqualification_date' => null,
             'labels' => null,
         ];
