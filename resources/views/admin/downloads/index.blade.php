@@ -104,7 +104,7 @@
                             </tbody>
                         </table>
                         @if($downloads->hasPages())
-                            <div class="mt-4">
+                            <div class="mt-4" id="pagination">
                                 {{ $downloads->links() }}
                             </div>
                         @endif
