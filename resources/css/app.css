@@ -973,12 +973,57 @@ textarea{
     color: #2563eb;
 }
 
-/* ページ送り */
-#pagination ul {
-	display: flex;
-    justify-content: center;
+/* ページ送り（UIKit） - 全ページネーション共通 */
+ul.uk-pagination {
+	display: flex !important;
+	justify-content: center;
+	gap: 12px;
+	flex-wrap: wrap;
 }
-#pagination li {
-	display: inline-block;
-	margin: 0 5px;
+
+ul.uk-pagination li {
+	margin: 0 !important;
+}
+
+ul.uk-pagination a,
+ul.uk-pagination span {
+	min-width: 35px;
+	height: 35px;
+	padding: 0 8px !important;
+	background: #fff !important;
+	color: #111 !important;
+	border: 2px solid #e5e7eb !important;
+	border-radius: 4px;
+	line-height: 31px !important;
+	font-weight: bold;
+	text-align: center;
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.15s linear;
+	text-decoration: none !important;
+}
+
+/* アクティブなページ（黒枠） */
+ul.uk-pagination li.uk-active span {
+	border-color: #111 !important;
+	border-width: 2px !important;
+	background: #fff !important;
+	color: #111 !important;
+}
+
+/* ディスabled状態 */
+ul.uk-pagination li.uk-disabled span {
+	background: #f3f4f6 !important;
+	color: #9ca3af !important;
+	border-color: #e5e7eb !important;
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* ホバー時 */
+ul.uk-pagination a:hover {
+	background: #111 !important;
+	color: #fff !important;
+	border-color: #111 !important;
 }
