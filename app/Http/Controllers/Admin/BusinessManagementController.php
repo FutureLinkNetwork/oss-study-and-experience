@@ -905,6 +905,11 @@ class BusinessManagementController extends Controller
         $validated['classroom_info_id'] = $classroom->id;
         $validated['created_user'] = Auth::id();
 
+        // コース状態の登録
+        if (isset($validated['is_active']) === false) {
+            $validated['is_active'] = 0;
+        }		
+
         CourseInfo::create($validated);
 
         return redirect()->route('admin.business.edit-classroom', [$business, $classroom])
