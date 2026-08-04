@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseRequest;
+use App\Services\SubdomainService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,8 @@ use Illuminate\View\View;
 
 class CourseRequestController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 習い事リクエスト一覧表示
      */
@@ -31,7 +34,7 @@ class CourseRequestController extends Controller
 
         // クエリビルダーを開始
         $query = CourseRequest::with(['updatedUser', 'subdomain'])
-            ->where('subdomain_id', $user->subdomain_id);
+            ->where('subdomain_id', $this->subdomainService->currentSubdomainId($request));
 
         // フリーワード検索（教室名と教室所在地を対象）
         if ($request->filled('keyword')) {
@@ -61,7 +64,7 @@ class CourseRequestController extends Controller
     /**
      * 習い事リクエスト詳細表示
      */
-    public function show(CourseRequest $courseRequest): View
+    public function show(Request $request, CourseRequest $courseRequest): View
     {
         // 認証チェック
         if (! Auth::check()) {
@@ -76,10 +79,8 @@ class CourseRequestController extends Controller
             abort(403, 'アクセス権限がありません。権限レベルが不足しています。');
         }
 
-        // アクセス権限チェック: ログインユーザーのサブドメインのデータのみアクセス可能
-        if ($courseRequest->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        // アクセス権限チェック: 現在のサブドメインのデータのみアクセス可能
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $courseRequest);
 
         $courseRequest->load(['updatedUser', 'subdomain']);
 
@@ -104,10 +105,8 @@ class CourseRequestController extends Controller
             abort(403, 'アクセス権限がありません。権限レベルが不足しています。');
         }
 
-        // アクセス権限チェック: ログインユーザーのサブドメインのデータのみアクセス可能
-        if ($courseRequest->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        // アクセス権限チェック: 現在のサブドメインのデータのみアクセス可能
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $courseRequest);
 
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:1000',

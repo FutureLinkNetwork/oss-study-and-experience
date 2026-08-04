@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccountingReportDownload;
+use App\Services\SubdomainService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AccountingReportController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 指定月のCSVをダウンロードし、ダウンロード追跡を更新
      *
@@ -43,10 +46,7 @@ class AccountingReportController extends Controller
         string $extension
     ) {
         $user = Auth::user();
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            return redirect()->route('admin.dashboard')->with('error', 'サブドメインが設定されていません。');
-        }
+        $subdomainId = $this->subdomainService->currentSubdomainId($request);
 
         $month = $request->get('month');
         if (! $month || ! preg_match('/^\d{4}-\d{2}$/', $month)) {

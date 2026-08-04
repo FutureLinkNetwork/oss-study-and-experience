@@ -46,6 +46,7 @@ class UserCourseSearchShowBusinessHoursTest extends TestCase
             'role_id' => $userRole->id,
             'login_id' => 'user_ucsbh',
             'is_active' => true,
+            'last_login_at' => now(),
         ]);
 
         $businessRole = Role::factory()->create([

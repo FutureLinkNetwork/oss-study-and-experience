@@ -72,13 +72,11 @@ class AdminDownloadController extends Controller
         }
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
-        if ($adminDownload->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $adminDownload);
 
         $s3Key = $adminDownload->s3_key;
         $originalEnvKey = $_ENV['AWS_ACCESS_KEY_ID'] ?? null;

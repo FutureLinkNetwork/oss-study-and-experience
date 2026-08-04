@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CourseCategory;
 use App\Models\CourseParentCategory;
+use App\Services\SubdomainService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,14 +14,16 @@ use Illuminate\Validation\ValidationException;
 
 class CourseCategoryController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 習い事種別管理画面
      */
     public function index(Request $request)
     {
-        // ログインユーザーのサブドメインIDを取得
+        // 現在のサブドメインIDを取得
         $user = Auth::user();
-        $selectedSubdomainId = $user->subdomain_id;
+        $selectedSubdomainId = $this->subdomainService->currentSubdomainId($request);
 
         $parentCategories = [];
         if ($selectedSubdomainId) {
@@ -50,7 +53,7 @@ class CourseCategoryController extends Controller
             ]);
 
             $userId = Auth::id();
-            $subdomainId = Auth::user()->subdomain_id;
+            $subdomainId = $this->subdomainService->currentSubdomainId($request);
             $maxSortOrder = CourseParentCategory::forSubdomain($subdomainId)->max('sort_order') ?? 0;
             $sortOrder = array_key_exists('sort_order', $validated) && $validated['sort_order'] !== null
                 ? (int) $validated['sort_order']
@@ -91,6 +94,8 @@ class CourseCategoryController extends Controller
      */
     public function updateParentCategory(Request $request, CourseParentCategory $parentCategory): JsonResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $parentCategory);
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:100',
@@ -126,8 +131,10 @@ class CourseCategoryController extends Controller
     /**
      * 親分類削除（論理削除）
      */
-    public function destroyParentCategory(CourseParentCategory $parentCategory): JsonResponse
+    public function destroyParentCategory(Request $request, CourseParentCategory $parentCategory): JsonResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $parentCategory);
+
         try {
             DB::transaction(function () use ($parentCategory) {
                 // 子分類も同時に論理削除
@@ -169,7 +176,7 @@ class CourseCategoryController extends Controller
             ]);
 
             $userId = Auth::id();
-            $subdomainId = Auth::user()->subdomain_id;
+            $subdomainId = $this->subdomainService->currentSubdomainId($request);
             $maxSortOrder = CourseCategory::forParent($validated['parent_category_id'])->max('sort_order') ?? 0;
             $sortOrder = array_key_exists('sort_order', $validated) && $validated['sort_order'] !== null
                 ? (int) $validated['sort_order']
@@ -209,6 +216,8 @@ class CourseCategoryController extends Controller
      */
     public function updateCategory(Request $request, CourseCategory $category): JsonResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $category);
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:100',
@@ -244,8 +253,10 @@ class CourseCategoryController extends Controller
     /**
      * 分類削除（論理削除）
      */
-    public function destroyCategory(CourseCategory $category): JsonResponse
+    public function destroyCategory(Request $request, CourseCategory $category): JsonResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $category);
+
         try {
             $category->update([
                 'is_active' => false,

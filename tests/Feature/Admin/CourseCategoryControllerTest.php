@@ -44,10 +44,18 @@ class CourseCategoryControllerTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test.localhost'.route($name, $params, false);
+    }
+
     public function test_course_categories_index_displays_for_admin(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.course-categories.index'));
+            ->get($this->url('admin.course-categories.index'));
 
         $response->assertStatus(200);
         $response->assertViewIs('admin.course-category.index');
@@ -56,7 +64,7 @@ class CourseCategoryControllerTest extends TestCase
     public function test_store_parent_category_with_sort_order_uses_given_value(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.parent-categories.store'), [
+            ->postJson($this->url('admin.course-categories.parent-categories.store'), [
                 'name' => '親A',
                 'sort_order' => 5,
             ]);
@@ -83,7 +91,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.parent-categories.store'), [
+            ->postJson($this->url('admin.course-categories.parent-categories.store'), [
                 'name' => '親B',
             ]);
 
@@ -109,7 +117,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->putJson(route('admin.course-categories.parent-categories.update', $parent), [
+            ->putJson($this->url('admin.course-categories.parent-categories.update', [$parent]), [
                 'name' => '親（改名）',
                 'sort_order' => 10,
             ]);
@@ -134,7 +142,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->putJson(route('admin.course-categories.parent-categories.update', $parent), [
+            ->putJson($this->url('admin.course-categories.parent-categories.update', [$parent]), [
                 'name' => '親',
             ]);
 
@@ -145,7 +153,7 @@ class CourseCategoryControllerTest extends TestCase
     public function test_store_parent_category_rejects_negative_sort_order(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.parent-categories.store'), [
+            ->postJson($this->url('admin.course-categories.parent-categories.store'), [
                 'name' => '親',
                 'sort_order' => -1,
             ]);
@@ -166,7 +174,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->putJson(route('admin.course-categories.parent-categories.update', $parent), [
+            ->putJson($this->url('admin.course-categories.parent-categories.update', [$parent]), [
                 'name' => '親',
                 'sort_order' => -1,
             ]);
@@ -187,7 +195,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.categories.store'), [
+            ->postJson($this->url('admin.course-categories.categories.store'), [
                 'parent_category_id' => $parent->id,
                 'name' => '小分類A',
                 'sort_order' => 2,
@@ -224,7 +232,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.categories.store'), [
+            ->postJson($this->url('admin.course-categories.categories.store'), [
                 'parent_category_id' => $parent->id,
                 'name' => '小分類B',
             ]);
@@ -260,7 +268,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->putJson(route('admin.course-categories.categories.update', $category), [
+            ->putJson($this->url('admin.course-categories.categories.update', [$category]), [
                 'name' => '小（改名）',
                 'sort_order' => 99,
             ]);
@@ -294,7 +302,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->putJson(route('admin.course-categories.categories.update', $category), [
+            ->putJson($this->url('admin.course-categories.categories.update', [$category]), [
                 'name' => '小',
             ]);
 
@@ -314,7 +322,7 @@ class CourseCategoryControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->postJson(route('admin.course-categories.categories.store'), [
+            ->postJson($this->url('admin.course-categories.categories.store'), [
                 'parent_category_id' => $parent->id,
                 'name' => '小',
                 'sort_order' => -1,

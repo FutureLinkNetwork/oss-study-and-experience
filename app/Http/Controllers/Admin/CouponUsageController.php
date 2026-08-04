@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateCouponUsageRequest;
 use App\Models\VoucherUsage;
 use App\Services\CouponUsageCsvExportService;
+use App\Services\SubdomainService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CouponUsageController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 編集可能な最小利用日（当月1日の先月1日 00:00:00）
      */
@@ -28,11 +31,8 @@ class CouponUsageController extends Controller
      */
     public function index(Request $request): View|RedirectResponse
     {
-        $user = Auth::user();
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            return redirect()->route('admin.dashboard')->with('error', 'サブドメインが設定されていません。');
-        }
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $subdomainId = $subdomain->id;
 
         $query = VoucherUsage::query()
             ->where('subdomain_id', $subdomainId)
@@ -61,7 +61,6 @@ class CouponUsageController extends Controller
 
         $usages = $query->orderByDesc('used_at')->paginate(20)->withQueryString();
         $filters = $request->only(['used_at_from', 'used_at_to', 'child_name', 'classroom_name']);
-        $subdomain = $user->subdomain;
 
         return view('admin.coupon_usages.index', compact('usages', 'filters', 'subdomain'));
     }
@@ -71,9 +70,7 @@ class CouponUsageController extends Controller
      */
     public function exportCsv(Request $request, CouponUsageCsvExportService $exportService): StreamedResponse|RedirectResponse
     {
-        $user = Auth::user();
-
-        return $exportService->downloadResponse($request, $user->subdomain_id);
+        return $exportService->downloadResponse($request, $this->subdomainService->currentSubdomainId($request));
     }
 
     /**
@@ -81,10 +78,7 @@ class CouponUsageController extends Controller
      */
     public function show(Request $request, VoucherUsage $voucherUsage): View|RedirectResponse
     {
-        $user = Auth::user();
-        if ($voucherUsage->subdomain_id !== $user->subdomain_id) {
-            abort(404);
-        }
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $voucherUsage);
 
         $voucherUsage->load(['user.beneficiary', 'classroomInfo', 'businessInfo', 'courseInfo']);
         $editableFrom = $this->editableUsedAtFrom();
@@ -92,7 +86,7 @@ class CouponUsageController extends Controller
             && $voucherUsage->used_at
             && Carbon::parse($voucherUsage->used_at)->gte($editableFrom);
 
-        $subdomain = $user->subdomain;
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
 
         return view('admin.coupon_usages.show', compact('voucherUsage', 'isEditable', 'editableFrom', 'subdomain'));
     }
@@ -102,10 +96,9 @@ class CouponUsageController extends Controller
      */
     public function update(UpdateCouponUsageRequest $request, VoucherUsage $voucherUsage): RedirectResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $voucherUsage);
+
         $user = Auth::user();
-        if ($voucherUsage->subdomain_id !== $user->subdomain_id) {
-            abort(404);
-        }
 
         if ($voucherUsage->is_cancelled) {
             return redirect()->route('admin.coupon-usages.show', $voucherUsage)

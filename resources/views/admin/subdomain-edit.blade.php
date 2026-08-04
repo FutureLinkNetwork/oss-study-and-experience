@@ -40,6 +40,36 @@
                     @csrf
                     @method('PUT')
 
+                    <!-- 自治体情報 -->
+                    <div>
+                        <h3 class="text-md font-medium text-gray-900 mb-4">
+                            <i class="fas fa-landmark text-gray-400 mr-2"></i>
+                            自治体情報
+                        </h3>
+
+                        <!-- 自治体名 -->
+                        <div class="field-group">
+                            <label for="name" class="field-label required">自治体名</label>
+                            <input type="text" name="name" id="name" required
+                                   value="{{ old('name', $subdomain->name ?? '') }}"
+                                   class="field-base field-w-100 @error('name') error @enderror">
+                            @error('name')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <!-- 自治体名カナ -->
+                        <div class="field-group">
+                            <label for="name_kana" class="field-label required">自治体名カナ</label>
+                            <input type="text" name="name_kana" id="name_kana" required
+                                   value="{{ old('name_kana', $subdomain->name_kana ?? '') }}"
+                                   class="field-base field-w-100 @error('name_kana') error @enderror">
+                            @error('name_kana')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
                     <!-- システム名 -->
                     <div class="field-group">
                         <label for="system_name" class="field-label required">システム名</label>

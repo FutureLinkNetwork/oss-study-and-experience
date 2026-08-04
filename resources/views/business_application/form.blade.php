@@ -225,7 +225,7 @@
                                        maxlength="50"
                                        required
                                        @if($mode === 'confirm') readonly @endif
-                                       placeholder="姓（例） 習事">
+                                       placeholder="姓（例） {{ $subdomain?->name }}">
                                 <input type="text"
                                        name="representative_given_name"
                                        id="representative_given_name"
@@ -249,7 +249,7 @@
                                        maxlength="50"
                                        required
                                        @if($mode === 'confirm') readonly @endif
-                                       placeholder="セイ（例） ナライゴト">
+                                       placeholder="セイ（例） {{ $subdomain?->name_kana }}">
                                 <input type="text"
                                        name="representative_given_name_kana"
                                        value="{{ old('representative_given_name_kana', $data['representative_given_name_kana'] ?? '') }}"
@@ -372,7 +372,7 @@
                         @if($mode === 'confirm')
                             @php
                                 $applicantType = $data['applicant_type'] ?? '';
-                                $documentLabels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($applicantType);
+                                $documentLabels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($applicantType, $subdomain?->name);
                                 $uploadedDocuments = $data['uploaded_documents'] ?? [];
                             @endphp
                             <div class="space-y-6">
@@ -409,7 +409,7 @@
                             <div class="space-y-6">
                                 @foreach(['corporation' => '法人', 'voluntary_group' => '任意団体', 'individual' => '個人事業主'] as $type => $typeLabel)
                                     @php
-                                        $labels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($type);
+                                        $labels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($type, $subdomain?->name);
                                     @endphp
                                     <div id="documents-{{ $type }}" class="document-type-block js-document-block" data-applicant-type="{{ $type }}" style="display: {{ old('applicant_type', $data['applicant_type'] ?? 'corporation') === $type ? 'block' : 'none' }};">
                                         @foreach($labels as $docKey => $docInfo)

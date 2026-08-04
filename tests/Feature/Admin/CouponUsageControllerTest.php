@@ -203,7 +203,7 @@ class CouponUsageControllerTest extends TestCase
         $response->assertSee('保存');
     }
 
-    public function test_show_returns_404_for_other_subdomain(): void
+    public function test_show_returns_403_for_other_subdomain(): void
     {
         $subdomain = Subdomain::factory()->create(['subdomain' => 'www']);
         $otherSubdomain = Subdomain::factory()->create(['subdomain' => 'other']);
@@ -212,7 +212,7 @@ class CouponUsageControllerTest extends TestCase
 
         $response = $this->actingAs($admin)->get('http://www.localhost/admin/coupon-usages/'.$data['usage']->id);
 
-        $response->assertStatus(404);
+        $response->assertStatus(403);
     }
 
     public function test_update_saves_and_sets_admin_correction_fields(): void

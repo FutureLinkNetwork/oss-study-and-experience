@@ -88,15 +88,13 @@ class ContactController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($contact->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $contact);
 
         $contact->load(['updatedUser', 'subdomain']);
 
@@ -124,15 +122,13 @@ class ContactController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($contact->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $contact);
 
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:1000',

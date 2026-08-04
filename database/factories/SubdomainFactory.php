@@ -19,6 +19,7 @@ class SubdomainFactory extends Factory
         return [
             'subdomain' => fake()->unique()->domainWord(),
             'name' => fake()->company(),
+            'name_kana' => 'テストジチタイ',
             'system_name' => fake()->company().'システム',
             'description' => fake()->optional()->sentence(),
             'is_active' => true,

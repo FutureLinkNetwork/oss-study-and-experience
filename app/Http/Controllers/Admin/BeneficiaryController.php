@@ -187,15 +187,13 @@ class BeneficiaryController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($beneficiary->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $beneficiary);
 
         $today = Carbon::today();
         $fiscalYearStartYear = FiscalYear::currentStartYear($today);
@@ -239,15 +237,13 @@ class BeneficiaryController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($beneficiary->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $beneficiary);
 
         try {
             $data = $request->validated();
@@ -579,12 +575,7 @@ class BeneficiaryController extends Controller
             ], 404);
         }
 
-        if ($beneficiary->subdomain_id !== $subdomain->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'アクセス権限がありません。',
-            ], 403);
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $beneficiary);
 
         if (empty($beneficiary->guardian_email) || ! filter_var($beneficiary->guardian_email, FILTER_VALIDATE_EMAIL)) {
             return response()->json([
@@ -800,9 +791,7 @@ class BeneficiaryController extends Controller
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($beneficiary->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $beneficiary);
 
         // ステータスが「資格喪失」の場合はエラー
         if ($beneficiary->status === '資格喪失') {
@@ -861,15 +850,13 @@ class BeneficiaryController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($beneficiary->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $beneficiary);
 
         // クーポンが該当利用者のものかチェック
         if ($voucher->beneficiary_id !== $beneficiary->id) {

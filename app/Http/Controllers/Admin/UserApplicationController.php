@@ -114,15 +114,13 @@ class UserApplicationController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($userApplication->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $userApplication);
 
         $userApplication->load('subdomain');
 
@@ -147,14 +145,12 @@ class UserApplicationController extends Controller
 
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
-        if ($userApplication->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $userApplication);
 
         $userApplication->update([
             'is_excluded_from_download' => $request->boolean('is_excluded_from_download'),
@@ -390,15 +386,13 @@ class UserApplicationController extends Controller
         // 現在表示しているURLのサブドメインを取得
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
         // アクセス権限チェック: 現在表示しているサブドメインのデータのみアクセス可能
-        if ($userApplication->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $userApplication);
 
         // 添付ファイルの存在確認
         if (empty($userApplication->document_s3_key) || empty($userApplication->document_original_filename)) {

@@ -75,7 +75,7 @@
 								<span class="text-sm text-gray-500">姓</span>
 								<input type="text" name="guardian_name_family" value="{{ old('guardian_name_family', $data['guardian_name_family'] ?? '') }}"
                                        class="field-base field-w-100" maxlength="50" required @if($mode === 'confirm') readonly @endif
-                                       placeholder="（例）習事" aria-label="就学援助認定者名（姓）">
+                                       placeholder="（例）{{ $subdomain->name }}" aria-label="就学援助認定者名（姓）">
                             </div>
                             <div class="flex-1">
 								<span class="text-sm text-gray-500">名</span>
@@ -95,7 +95,7 @@
 								<span class="text-sm text-gray-500">姓</span>
 								<input type="text" name="guardian_name_kana_family" value="{{ old('guardian_name_kana_family', $data['guardian_name_kana_family'] ?? '') }}"
                                        class="field-base field-w-100" maxlength="50" required @if($mode === 'confirm') readonly @endif
-                                       placeholder="（例）ナライゴト" aria-label="就学援助認定者名カナ（姓）">
+                                       placeholder="（例）{{ $subdomain->name_kana }}" aria-label="就学援助認定者名カナ（姓）">
                             </div>
                             <div class="flex-1">
 								<span class="text-sm text-gray-500">名</span>
@@ -118,7 +118,7 @@
                     <div class="md:col-span-2">
                         <label class="field-label required label-l">住所</label>
                         <textarea name="guardian_address" rows="3" 
-                                  class="field-base field-w-100" maxlength="500" required @if($mode === 'confirm') readonly @endif placeholder="（例） 千葉県船橋市">{{ old('guardian_address', $data['guardian_address'] ?? '') }}</textarea>
+                                  class="field-base field-w-100" maxlength="500" required @if($mode === 'confirm') readonly @endif placeholder="（例） {{ $subdomain->name }}中央 1-1 アパート 101 号室">{{ old('guardian_address', $data['guardian_address'] ?? '') }}</textarea>
 						<div class="notice2">※住民登録をしている住所地を記載してください。</div>
 						<div class="notice2">※アパートの方は号室まで記入してください</div>
                     </div>
@@ -128,7 +128,7 @@
                         <label class="field-label required label-l">電話番号</label>
                         <input type="text" name="guardian_phone" value="{{ old('guardian_phone', $data['guardian_phone'] ?? '') }}" 
                                class="field-base field-w-100" maxlength="20" required @if($mode === 'confirm') readonly @endif
-							   placeholder="（例）072-784-8106">
+							   placeholder="（例）000-0000-0000">
 						<div class="notice2">※日中連絡のつく電話番号</div>
 						<div class="notice2">※半角数字、ハイフン「-」ありで入力してください</div>
                     </div>
@@ -150,7 +150,7 @@
 								<span class="text-sm text-gray-500">姓</span>
 								<input type="text" name="child_name_family" value="{{ old('child_name_family', $data['child_name_family'] ?? '') }}"
                                        class="field-base field-w-100" maxlength="50" required @if($mode === 'confirm') readonly @endif
-                                       placeholder="（例）習事" aria-label="対象児童名（姓）">
+                                       placeholder="（例）{{ $subdomain->name }}" aria-label="対象児童名（姓）">
                             </div>
                             <div class="flex-1">
 								<span class="text-sm text-gray-500">名</span>
@@ -169,7 +169,7 @@
 								<span class="text-sm text-gray-500">姓</span>
 								<input type="text" name="child_name_kana_family" value="{{ old('child_name_kana_family', $data['child_name_kana_family'] ?? '') }}"
                                        class="field-base field-w-100" maxlength="50" required @if($mode === 'confirm') readonly @endif
-                                       placeholder="（例）ナライゴト" aria-label="対象児童名カナ（姓）">
+                                       placeholder="（例）{{ $subdomain->name_kana }}" aria-label="対象児童名カナ（姓）">
                             </div>
                             <div class="flex-1">
 								<span class="text-sm text-gray-500">名</span>
@@ -193,7 +193,7 @@
                         <label class="field-label required label-l">学校名<span style="color: red;">（来年度入学予定の方は、就学される学校名をご記入ください。）</span></label>
                         <input type="text" name="elementary_school_name" value="{{ old('elementary_school_name', $data['elementary_school_name'] ?? '') }}" 
                                class="field-base field-w-100" maxlength="100" required @if($mode === 'confirm') readonly @endif
-							   placeholder="（例） 習事市立習事中央小学校">
+							   placeholder="（例） {{ $subdomain->name }}立中央小学校">
                     </div>
 
                     <!-- 学年 -->
@@ -242,7 +242,7 @@
                                   maxlength="500" 
                                   required 
                                   @if($mode === 'confirm') readonly @endif
-								  placeholder="（例） 習事市">{{ old('child_address', $data['child_address'] ?? '') }}</textarea>
+								  placeholder="（例） {{ $subdomain->name }}中央 1-1 アパート 101 号室">{{ old('child_address', $data['child_address'] ?? '') }}</textarea>
 						<div class="notice2">※住民登録をしている住所地を記載してください。</div>
 						<div class="notice2">※アパートの方は号室まで記入してください</div>
                     </div>
@@ -254,7 +254,7 @@
                             <div class="notice2" style="margin-top: 10px; margin-bottom: 10px;">※同意事項を必ずお読みいただき、すべてに同意の上、 チェックをしてください。</div>
                             <input type="checkbox" name="survey_consent" value="1" 
                                    class="mr-2" {{ old('survey_consent', $data['survey_consent'] ?? false) ? 'checked' : '' }} 
-                                   required @if($mode === 'confirm') disabled @endif>私は、子どもの習い事応援事業における助成を申請するにあたり、次に掲げる全ての事項について、同意します</span>
+                                   required @if($mode === 'confirm') disabled @endif>私は、{{ $subdomain->system_name }}における助成を申請するにあたり、次に掲げる全ての事項について、同意します</span>
                         </label>
                         @if($mode === 'confirm')
                             <input type="hidden" name="survey_consent" value="1">
@@ -272,8 +272,6 @@ dd li{
     margin:10px;
 }							
 						</style>
-						<dt>タイトル</dt>
-<dd>本文テキスト</dd>
                     </div>
                 </div>
             </div>

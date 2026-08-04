@@ -43,7 +43,9 @@
 |--------|--------|-----|------|------------|------|
 | ID | id | BIGINT UNSIGNED | NO | AUTO | PK |
 | サブドメイン | subdomain | VARCHAR(255) | NO | - | UNIQUE |
-| 名前 | name | VARCHAR(255) | NO | - | |
+| 名前 | name | VARCHAR(255) | NO | - | 自治体名 |
+| 自治体名カナ | name_kana | VARCHAR(255) | YES | NULL | 全角カタカナ |
+| システム名 | system_name | VARCHAR(255) | YES | NULL | ページタイトル用 |
 | 説明 | description | VARCHAR(255) | YES | NULL | |
 | 有効フラグ | is_active | BOOLEAN | NO | true | |
 | 設定（JSON） | settings | JSON | YES | NULL | |
@@ -58,7 +60,6 @@
 | 電話番号 | phone | VARCHAR(20) | YES | NULL | |
 | FAX | fax | VARCHAR(20) | YES | NULL | |
 | 振込日ルール | transfer_date_rule | VARCHAR(30) | YES | NULL | current_month_end / next_month_end |
-| システム名 | system_name | VARCHAR(255) | YES | NULL | ページタイトル用 |
 | 全銀依頼人コード | zengin_requester_code | VARCHAR(10) | YES | NULL | |
 | 全銀依頼人名 | zengin_requester_name | VARCHAR(40) | YES | NULL | |
 | 全銀取引金融機関番号 | zengin_bank_code | VARCHAR(4) | YES | NULL | |
