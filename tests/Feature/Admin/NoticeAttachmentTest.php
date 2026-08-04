@@ -47,6 +47,14 @@ class NoticeAttachmentTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test.localhost'.route($name, $params, false);
+    }
+
     public function test_create_notice_with_attachment_stores_file_and_saves_metadata(): void
     {
         $file = UploadedFile::fake()->createWithContent(
@@ -55,7 +63,7 @@ class NoticeAttachmentTest extends TestCase
         );
 
         $response = $this->actingAs($this->adminUser)
-            ->post(route('admin.notices.store'), [
+            ->post($this->url('admin.notices.store'), [
                 'subdomain_id' => $this->subdomain->id,
                 'title' => 'テストお知らせ',
                 'content' => '本文',
@@ -67,7 +75,7 @@ class NoticeAttachmentTest extends TestCase
                 'attachment' => $file,
             ]);
 
-        $response->assertRedirect(route('admin.notices.index'));
+        $response->assertRedirect($this->url('admin.notices.index'));
 
         $notice = Notice::query()->where('title', 'テストお知らせ')->first();
         $this->assertNotNull($notice);
@@ -79,7 +87,7 @@ class NoticeAttachmentTest extends TestCase
     public function test_create_notice_without_attachment_succeeds(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->post(route('admin.notices.store'), [
+            ->post($this->url('admin.notices.store'), [
                 'subdomain_id' => $this->subdomain->id,
                 'title' => '添付なしお知らせ',
                 'content' => '本文',
@@ -90,7 +98,7 @@ class NoticeAttachmentTest extends TestCase
                 'show_on_business_dashboard' => false,
             ]);
 
-        $response->assertRedirect(route('admin.notices.index'));
+        $response->assertRedirect($this->url('admin.notices.index'));
 
         $notice = Notice::query()->where('title', '添付なしお知らせ')->first();
         $this->assertNotNull($notice);
@@ -124,7 +132,7 @@ class NoticeAttachmentTest extends TestCase
         );
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.notices.update', $notice), [
+            ->put($this->url('admin.notices.update', [$notice]), [
                 'subdomain_id' => $this->subdomain->id,
                 'title' => $notice->title,
                 'content' => $notice->content,
@@ -136,7 +144,7 @@ class NoticeAttachmentTest extends TestCase
                 'attachment' => $newFile,
             ]);
 
-        $response->assertRedirect(route('admin.notices.index'));
+        $response->assertRedirect($this->url('admin.notices.index'));
 
         $this->assertFalse(Storage::disk('s3')->exists('subdomain_1/notice_attachments/1/old.pdf'));
 
@@ -168,7 +176,7 @@ class NoticeAttachmentTest extends TestCase
         Storage::disk('s3')->put($notice->attachment_s3_key, 'dummy');
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.notices.update', $notice), [
+            ->put($this->url('admin.notices.update', [$notice]), [
                 'subdomain_id' => $this->subdomain->id,
                 'title' => $notice->title,
                 'content' => $notice->content,
@@ -180,7 +188,7 @@ class NoticeAttachmentTest extends TestCase
                 'attachment_remove' => '1',
             ]);
 
-        $response->assertRedirect(route('admin.notices.index'));
+        $response->assertRedirect($this->url('admin.notices.index'));
 
         $notice->refresh();
         $this->assertNull($notice->attachment_s3_key);
@@ -210,7 +218,7 @@ class NoticeAttachmentTest extends TestCase
         Storage::disk('s3')->put($notice->attachment_s3_key, 'content');
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.notices.attachment.download', $notice));
+            ->get($this->url('admin.notices.attachment.download', [$notice]));
 
         $response->assertStatus(200);
         $response->assertHeader('content-disposition');
@@ -233,7 +241,7 @@ class NoticeAttachmentTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.notices.attachment.download', $notice));
+            ->get($this->url('admin.notices.attachment.download', [$notice]));
 
         $response->assertStatus(404);
     }

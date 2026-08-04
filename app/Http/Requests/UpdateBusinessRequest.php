@@ -12,7 +12,14 @@ class UpdateBusinessRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        $business = $this->route('business');
+
+        if ($user === null || ! $business instanceof \App\Models\BusinessInfo) {
+            return false;
+        }
+
+        return (int) $business->subdomain_id === (int) $user->subdomain_id;
     }
 
     /**

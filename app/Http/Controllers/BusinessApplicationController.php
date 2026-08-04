@@ -57,14 +57,16 @@ class BusinessApplicationController extends Controller
         try {
             // 親カテゴリが存在するかチェック
             if (class_exists('App\Models\CourseParentCategory')) {
-                $parentCategories = CourseParentCategory::where('is_active', true)
-                    ->orderBy('sort_order')
+                $parentCategories = CourseParentCategory::active()
+                    ->forSubdomain($subdomain->id)
+                    ->ordered()
                     ->get();
 
                 foreach ($parentCategories as $parent) {
                     $childCategories = CourseCategory::where('parent_category_id', $parent->id)
-                        ->where('is_active', true)
-                        ->orderBy('sort_order')
+                        ->active()
+                        ->forSubdomain($subdomain->id)
+                        ->ordered()
                         ->get();
 
                     if ($childCategories->count() > 0) {
@@ -80,11 +82,7 @@ class BusinessApplicationController extends Controller
         $mode = 'create';
         $data = [];
 
-        $antisocialForcesText = '';
-        $antisocialPath = resource_path('views/business_application/antisocial_forces.txt');
-        if (file_exists($antisocialPath)) {
-            $antisocialForcesText = file_get_contents($antisocialPath);
-        }
+        $antisocialForcesText = $this->loadAntisocialForcesText($subdomain);
 
         return view('business_application.form', compact('categories', 'mode', 'data', 'formToken', 'latitude', 'longitude', 'antisocialForcesText'));
     }
@@ -135,17 +133,20 @@ class BusinessApplicationController extends Controller
             }
 
             // カテゴリ情報も取得
+            $subdomain = $this->getCurrentSubdomain($request);
             $categories = collect();
             try {
                 if (class_exists('App\Models\CourseParentCategory')) {
-                    $parentCategories = CourseParentCategory::where('is_active', true)
-                        ->orderBy('sort_order')
+                    $parentCategories = CourseParentCategory::active()
+                        ->forSubdomain($subdomain->id)
+                        ->ordered()
                         ->get();
 
                     foreach ($parentCategories as $parent) {
                         $childCategories = CourseCategory::where('parent_category_id', $parent->id)
-                            ->where('is_active', true)
-                            ->orderBy('sort_order')
+                            ->active()
+                            ->forSubdomain($subdomain->id)
+                            ->ordered()
                             ->get();
 
                         if ($childCategories->count() > 0) {
@@ -160,12 +161,7 @@ class BusinessApplicationController extends Controller
 
             $mode = 'create';
             $data = $request->all();
-
-            $antisocialForcesText = '';
-            $antisocialPath = resource_path('views/business_application/antisocial_forces.txt');
-            if (file_exists($antisocialPath)) {
-                $antisocialForcesText = file_get_contents($antisocialPath);
-            }
+            $antisocialForcesText = $this->loadAntisocialForcesText($subdomain);
 
             return back()->withErrors($validator)->withInput()->with(compact('antisocialForcesText'));
         }
@@ -193,14 +189,16 @@ class BusinessApplicationController extends Controller
         $categories = collect();
         try {
             if (class_exists('App\Models\CourseParentCategory')) {
-                $parentCategories = CourseParentCategory::where('is_active', true)
-                    ->orderBy('sort_order')
+                $parentCategories = CourseParentCategory::active()
+                    ->forSubdomain($subdomain->id)
+                    ->ordered()
                     ->get();
 
                 foreach ($parentCategories as $parent) {
                     $childCategories = CourseCategory::where('parent_category_id', $parent->id)
-                        ->where('is_active', true)
-                        ->orderBy('sort_order')
+                        ->active()
+                        ->forSubdomain($subdomain->id)
+                        ->ordered()
                         ->get();
 
                     if ($childCategories->count() > 0) {
@@ -585,6 +583,7 @@ class BusinessApplicationController extends Controller
 
         // 必須書類アップロード：申請者種別に応じたキーで検証
         $applicantType = $request->input('applicant_type', '');
+        $subdomainName = $this->getCurrentSubdomain($request)->name;
         $requiredDocKeys = BusinessInfo::getRequiredDocumentKeys($applicantType);
         $maxSize = config('app.uploads.business_documents.max_size');
         $fileRule = 'required|file|mimes:jpeg,jpg,png,pdf,xls,xlsx,doc,docx|max:'.$maxSize;
@@ -645,7 +644,7 @@ class BusinessApplicationController extends Controller
             'classrooms.*.lesson_category.required' => '習い事の種別を選択してください。',
         ];
         foreach ($requiredDocKeys as $key) {
-            $label = BusinessInfo::getDocumentLabel($applicantType, $key);
+            $label = BusinessInfo::getDocumentLabel($applicantType, $key, $subdomainName);
             $messages['documents.'.$key.'.required'] = '必須書類「'.$label.'」をすべてアップロードしてください。';
             $messages['documents.'.$key.'.uploaded'] = '必須書類「'.$label.'」のアップロードに失敗しました。ファイルサイズが大きすぎる、または接続が切れた可能性があります。10MB以下のファイルで再度お試しください。';
             $messages['documents.'.$key.'.mimes'] = '必須書類「'.$label.'」はJPEG、PNG、PDF、Excel、Wordファイルをアップロードしてください。';
@@ -1144,5 +1143,17 @@ class BusinessApplicationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
         }
+    }
+
+    private function loadAntisocialForcesText(Subdomain $subdomain): string
+    {
+        $antisocialPath = public_path('subdomain_assets/'.$subdomain->subdomain.'/text/antisocial_forces.txt');
+        if (! file_exists($antisocialPath)) {
+            return '';
+        }
+
+        $contents = file_get_contents($antisocialPath);
+
+        return $contents !== false ? $contents : '';
     }
 }

@@ -77,14 +77,12 @@ class InquiryController extends Controller
 
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
-        if ($inquiry->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $inquiry);
 
         $inquiry->load(['user.beneficiary', 'user.businessInfos', 'subdomain']);
 
@@ -108,14 +106,12 @@ class InquiryController extends Controller
 
         try {
             $subdomainService = new SubdomainService;
-            $subdomain = $subdomainService->getCurrentSubdomain($request);
+            $subdomainService->getCurrentSubdomain($request);
         } catch (\Exception $e) {
             abort(404);
         }
 
-        if ($inquiry->subdomain_id !== $subdomain->id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $subdomainService->ensureBelongsToCurrentSubdomain($request, $inquiry);
 
         $inquiry->update([
             'status' => $request->validated('status'),

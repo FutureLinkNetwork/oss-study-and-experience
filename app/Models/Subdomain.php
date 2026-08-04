@@ -19,6 +19,7 @@ class Subdomain extends Model
     protected $fillable = [
         'subdomain',
         'name',
+        'name_kana',
         'system_name',
         'description',
         'voucher_amount',

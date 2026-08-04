@@ -43,6 +43,14 @@ class BusinessExportCsvTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test.localhost'.route($name, $params, false);
+    }
+
     public function test_export_csv_returns_zip_with_three_csv_files(): void
     {
         BusinessInfo::create([
@@ -68,7 +76,7 @@ class BusinessExportCsvTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.export-csv'));
+            ->get($this->url('admin.business.export-csv'));
 
         $response->assertStatus(200);
         $response->assertHeader('content-disposition');
@@ -140,7 +148,7 @@ class BusinessExportCsvTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.export-csv', ['keyword' => 'ヒットする']));
+            ->get($this->url('admin.business.export-csv', ['keyword' => 'ヒットする']));
 
         $response->assertStatus(200);
         $content = $response->streamedContent();
@@ -225,7 +233,7 @@ class BusinessExportCsvTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.export-csv'));
+            ->get($this->url('admin.business.export-csv'));
 
         $response->assertStatus(200);
         $content = $response->streamedContent();
@@ -277,7 +285,7 @@ class BusinessExportCsvTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.export-csv'));
+            ->get($this->url('admin.business.export-csv'));
 
         $response->assertStatus(200);
 
@@ -292,5 +300,70 @@ class BusinessExportCsvTest extends TestCase
         $businessUtf8 = mb_convert_encoding($businessCsv, 'UTF-8', 'SJIS-win');
         $this->assertStringContainsString('行政機関', $businessUtf8);
         $this->assertStringContainsString('行政機関テスト事業者', $businessUtf8);
+    }
+
+    public function test_export_csv_filters_businesses_by_logged_in_subdomain(): void
+    {
+        BusinessInfo::create([
+            'user_id' => null,
+            'subdomain_id' => $this->subdomain->id,
+            'applicant_type' => 'individual',
+            'business_name' => '同一サブドメイン事業者',
+            'business_name_kana' => 'ドウイツサブドメインジギョウシャ',
+            'representative_name' => '代表者',
+            'representative_name_kana' => 'ダイヒョウシャ',
+            'postal_code' => '664-0001',
+            'prefecture' => '兵庫県',
+            'city' => '伊丹市',
+            'address1' => '荻野1-1-1',
+            'phone' => '072-123-1111',
+            'email' => 'same-subdomain-export@example.com',
+            'apply' => 1,
+            'is_active' => 1,
+            'status' => '利用中',
+            'qr_only' => false,
+        ]);
+
+        $otherSubdomain = Subdomain::factory()->create([
+            'subdomain' => 'other-export-test',
+            'is_active' => true,
+        ]);
+
+        BusinessInfo::create([
+            'user_id' => null,
+            'subdomain_id' => $otherSubdomain->id,
+            'applicant_type' => 'individual',
+            'business_name' => '他サブドメインCSV事業者',
+            'business_name_kana' => 'タサブドメインシーエスブイジギョウシャ',
+            'representative_name' => '代表者',
+            'representative_name_kana' => 'ダイヒョウシャ',
+            'postal_code' => '664-0002',
+            'prefecture' => '兵庫県',
+            'city' => '伊丹市',
+            'address1' => '荻野2-2-2',
+            'phone' => '072-123-2222',
+            'email' => 'other-subdomain-export@example.com',
+            'apply' => 1,
+            'is_active' => 1,
+            'status' => '利用中',
+            'qr_only' => false,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get($this->url('admin.business.export-csv'));
+
+        $response->assertStatus(200);
+
+        $tmpFile = tempnam(sys_get_temp_dir(), 'business_export_subdomain_');
+        file_put_contents($tmpFile, $response->streamedContent());
+        $zip = new \ZipArchive;
+        $zip->open($tmpFile);
+        $businessCsv = $zip->getFromName('事業者情報.csv');
+        $zip->close();
+        @unlink($tmpFile);
+
+        $businessUtf8 = mb_convert_encoding($businessCsv, 'UTF-8', 'SJIS-win');
+        $this->assertStringContainsString('同一サブドメイン事業者', $businessUtf8);
+        $this->assertStringNotContainsString('他サブドメインCSV事業者', $businessUtf8);
     }
 }

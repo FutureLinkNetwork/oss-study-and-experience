@@ -9,7 +9,6 @@ use App\Models\BusinessInfo;
 use App\Models\ClassroomInfo;
 use App\Models\CourseInfo;
 use App\Models\Role;
-use App\Models\Subdomain;
 use App\Models\User;
 use App\Services\BusinessCsvExportService;
 use App\Services\ImageProcessingService;
@@ -30,10 +29,13 @@ class BusinessManagementController extends Controller
 
     protected readonly MailLogService $mailLogService;
 
-    public function __construct(ImageProcessingService $imageProcessingService, MailLogService $mailLogService)
+    protected readonly SubdomainService $subdomainService;
+
+    public function __construct(ImageProcessingService $imageProcessingService, MailLogService $mailLogService, SubdomainService $subdomainService)
     {
         $this->imageProcessingService = $imageProcessingService;
         $this->mailLogService = $mailLogService;
+        $this->subdomainService = $subdomainService;
     }
 
     /**
@@ -51,6 +53,8 @@ class BusinessManagementController extends Controller
             },
             'user',
         ]);
+
+        $query->where('subdomain_id', $this->subdomainService->currentSubdomainId($request));
 
         // フリーワード検索
         if ($request->filled('keyword')) {
@@ -93,6 +97,8 @@ class BusinessManagementController extends Controller
             'classrooms.courses',
             'classrooms.lessonCategoryInfo.parentCategory',
         ]);
+
+        $query->where('subdomain_id', $this->subdomainService->currentSubdomainId($request));
 
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
@@ -158,7 +164,7 @@ class BusinessManagementController extends Controller
             }
 
             // 現在のサブドメインIDを取得
-            $subdomainService = new SubdomainService;
+            $subdomainService = $this->subdomainService;
             $host = $request->getHost();
             $extractedSubdomain = $subdomainService->extractSubdomainFromHost($host);
 
@@ -266,8 +272,10 @@ class BusinessManagementController extends Controller
     /**
      * 事業者編集フォーム
      */
-    public function edit(BusinessInfo $business)
+    public function edit(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         // フォームアクセス用トークンを生成してセッションに保存（郵便番号検索API用）
         $formToken = bin2hex(random_bytes(32));
         session(['form_access_token' => $formToken]);
@@ -283,6 +291,8 @@ class BusinessManagementController extends Controller
      */
     public function update(UpdateBusinessRequest $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $validated = $request->validated();
         $representativeNames = $this->resolveRepresentativeNames($validated);
         $validated['representative_name'] = $representativeNames['representative_name'];
@@ -464,8 +474,10 @@ class BusinessManagementController extends Controller
     /**
      * 事業者無効化処理
      */
-    public function deactivate(BusinessInfo $business)
+    public function deactivate(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $business->deactivate();
 
         return redirect()->route('admin.business.index')
@@ -475,8 +487,10 @@ class BusinessManagementController extends Controller
     /**
      * 事業者有効化処理
      */
-    public function activate(BusinessInfo $business)
+    public function activate(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $business->update(['is_active' => 1]);
 
         return redirect()->route('admin.business.index')
@@ -486,8 +500,10 @@ class BusinessManagementController extends Controller
     /**
      * 教室一覧
      */
-    public function classrooms(BusinessInfo $business)
+    public function classrooms(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $classrooms = $business->classrooms()->with('courses')->get();
 
         return view('admin.business.classrooms', compact('business', 'classrooms'));
@@ -496,20 +512,21 @@ class BusinessManagementController extends Controller
     /**
      * 教室新規登録フォーム
      */
-    public function createClassroom(BusinessInfo $business)
+    public function createClassroom(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $classroom = null; // 新規作成時はnull
 
-        // 習い事種別データを取得（ログインユーザーのサブドメインのもの）
-        $user = Auth::user();
+        // 習い事種別データを取得（現在のサブドメインのもの）
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $parentCategories = \App\Models\CourseParentCategory::with(['activeCategories'])
-            ->forSubdomain($user->subdomain_id)
+            ->forSubdomain($subdomain->id)
             ->active()
             ->ordered()
             ->get();
 
         // サブドメインの座標を取得（地図表示用）
-        $subdomain = Subdomain::find($user->subdomain_id);
         $latitude = $subdomain->latitude ?? 35.6812;
         $longitude = $subdomain->longitude ?? 139.7671;
 
@@ -521,6 +538,8 @@ class BusinessManagementController extends Controller
      */
     public function storeClassroom(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $validated = $request->validate([
             'classroom_name' => 'required|string|max:100',
             'classroom_name_kana' => 'nullable|string|max:100',
@@ -636,24 +655,26 @@ class BusinessManagementController extends Controller
     /**
      * 教室編集フォーム
      */
-    public function editClassroom(BusinessInfo $business, ClassroomInfo $classroom)
+    public function editClassroom(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         // 最新のデータを取得するため、モデルをリフレッシュ
         $classroom->refresh();
 
         // 関連するコース情報も取得
         $classroom->load('courses');
 
-        // 習い事種別データを取得（ログインユーザーのサブドメインのもの）
-        $user = Auth::user();
+        // 習い事種別データを取得（現在のサブドメインのもの）
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $parentCategories = \App\Models\CourseParentCategory::with(['activeCategories'])
-            ->forSubdomain($user->subdomain_id)
+            ->forSubdomain($subdomain->id)
             ->active()
             ->ordered()
             ->get();
 
         // サブドメインの座標を取得（地図表示用）
-        $subdomain = Subdomain::find($user->subdomain_id);
         $latitude = $subdomain->latitude ?? 35.6812;
         $longitude = $subdomain->longitude ?? 139.7671;
 
@@ -665,6 +686,9 @@ class BusinessManagementController extends Controller
      */
     public function updateClassroom(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         $validated = $request->validate([
             'classroom_name' => 'required|string|max:100',
             'classroom_name_kana' => 'required|string|max:100',
@@ -834,8 +858,11 @@ class BusinessManagementController extends Controller
     /**
      * 教室無効化処理
      */
-    public function deactivateClassroom(BusinessInfo $business, ClassroomInfo $classroom)
+    public function deactivateClassroom(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         $classroom->deactivate();
 
         return redirect()->route('admin.business.edit', $business)
@@ -845,8 +872,11 @@ class BusinessManagementController extends Controller
     /**
      * 教室有効化処理
      */
-    public function activateClassroom(BusinessInfo $business, ClassroomInfo $classroom)
+    public function activateClassroom(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         $classroom->update(['is_active' => 1]);
 
         return redirect()->route('admin.business.edit', $business)
@@ -856,8 +886,11 @@ class BusinessManagementController extends Controller
     /**
      * コース一覧
      */
-    public function courses(BusinessInfo $business, ClassroomInfo $classroom)
+    public function courses(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         $courses = $classroom->courses()->get();
 
         return view('admin.business.courses', compact('business', 'classroom', 'courses'));
@@ -866,11 +899,13 @@ class BusinessManagementController extends Controller
     /**
      * コース新規登録フォーム
      */
-    public function createCourse(BusinessInfo $business, ClassroomInfo $classroom)
+    public function createCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
         $course = null; // 新規作成時はnull
-        $user = User::with('subdomain')->find(Auth::id());
-        $subdomain = $user->subdomain ?? Subdomain::first();
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $grades = $subdomain ? $subdomain->getGrades() : [];
 
         return view('admin.business.course-form', compact('business', 'classroom', 'course', 'grades'));
@@ -881,8 +916,10 @@ class BusinessManagementController extends Controller
      */
     public function storeCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom)
     {
-        $user = User::with('subdomain')->find(Auth::id());
-        $subdomain = $user->subdomain ?? Subdomain::first();
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $availableGrades = $subdomain ? $subdomain->getGrades() : [];
 
         $validated = $request->validate([
@@ -908,7 +945,7 @@ class BusinessManagementController extends Controller
         // コース状態の登録
         if (isset($validated['is_active']) === false) {
             $validated['is_active'] = 0;
-        }		
+        }
 
         CourseInfo::create($validated);
 
@@ -919,10 +956,13 @@ class BusinessManagementController extends Controller
     /**
      * コース編集フォーム
      */
-    public function editCourse(BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
+    public function editCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
     {
-        $user = User::with('subdomain')->find(Auth::id());
-        $subdomain = $user->subdomain ?? Subdomain::first();
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+        $this->ensureCourseBelongsToClassroom($classroom, $course);
+
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $grades = $subdomain ? $subdomain->getGrades() : [];
 
         return view('admin.business.course-form', compact('business', 'classroom', 'course', 'grades'));
@@ -933,8 +973,11 @@ class BusinessManagementController extends Controller
      */
     public function updateCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
     {
-        $user = User::with('subdomain')->find(Auth::id());
-        $subdomain = $user->subdomain ?? Subdomain::first();
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+        $this->ensureCourseBelongsToClassroom($classroom, $course);
+
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
         $availableGrades = $subdomain ? $subdomain->getGrades() : [];
 
         $validated = $request->validate([
@@ -968,8 +1011,12 @@ class BusinessManagementController extends Controller
     /**
      * コース無効化処理
      */
-    public function deactivateCourse(BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
+    public function deactivateCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+        $this->ensureCourseBelongsToClassroom($classroom, $course);
+
         $course->deactivate();
 
         return redirect()->route('admin.business.edit-classroom', [$business, $classroom])
@@ -979,8 +1026,12 @@ class BusinessManagementController extends Controller
     /**
      * コース有効化処理
      */
-    public function activateCourse(BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
+    public function activateCourse(Request $request, BusinessInfo $business, ClassroomInfo $classroom, CourseInfo $course)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
+        $this->ensureCourseBelongsToClassroom($classroom, $course);
+
         $course->update(['is_active' => 1]);
 
         return redirect()->route('admin.business.edit-classroom', [$business, $classroom])
@@ -990,8 +1041,10 @@ class BusinessManagementController extends Controller
     /**
      * ビジネス書類ダウンロード
      */
-    public function downloadDocument(BusinessInfo $business, string $type)
+    public function downloadDocument(Request $request, BusinessInfo $business, string $type)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         // ユーザーの権限を確認（管理者、サブドメイン管理者、サブドメイン作業者のみ）
         $user = Auth::user();
         if (! $user || ! in_array($user->role->level, [100, 80, 60])) {
@@ -1123,6 +1176,8 @@ class BusinessManagementController extends Controller
      */
     public function downloadAdminAttachment(Request $request, BusinessInfo $business)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         $key = $request->query('key');
         if (! is_string($key) || $key === '') {
             abort(404, '指定が不正です。');
@@ -1216,8 +1271,10 @@ class BusinessManagementController extends Controller
     /**
      * 教室画像ダウンロード
      */
-    public function downloadClassroomImage(BusinessInfo $business, ClassroomInfo $classroom, string $size)
+    public function downloadClassroomImage(Request $request, BusinessInfo $business, ClassroomInfo $classroom, string $size)
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         // ユーザーの権限を確認（管理者、サブドメイン管理者、サブドメイン作業者のみ）
         $user = Auth::user();
         if (! $user || ! in_array($user->role->level, [100, 80, 60])) {
@@ -1225,9 +1282,7 @@ class BusinessManagementController extends Controller
         }
 
         // 教室が事業者に属しているかを確認
-        if ($classroom->business_info_id !== $business->id) {
-            abort(404, '指定された教室が見つかりません。');
-        }
+        $this->ensureClassroomBelongsToBusiness($business, $classroom);
 
         // 画像が存在するかを確認
         if (! $classroom->hasClassroomImage()) {
@@ -1376,6 +1431,8 @@ class BusinessManagementController extends Controller
      */
     public function sendLoginInfo(Request $request, BusinessInfo $business): \Illuminate\Http\JsonResponse
     {
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $business);
+
         try {
             // メールアドレスの確認
             if (empty($business->email)) {
@@ -1560,5 +1617,25 @@ class BusinessManagementController extends Controller
             'representative_name' => $representativeNameFull,
             'representative_name_kana' => $representativeNameKanaFull,
         ];
+    }
+
+    /**
+     * 教室が指定事業者に属するか確認する
+     */
+    private function ensureClassroomBelongsToBusiness(BusinessInfo $business, ClassroomInfo $classroom): void
+    {
+        if ((int) $classroom->business_info_id !== (int) $business->id) {
+            abort(403, 'アクセス権限がありません。');
+        }
+    }
+
+    /**
+     * コースが指定教室に属するか確認する
+     */
+    private function ensureCourseBelongsToClassroom(ClassroomInfo $classroom, CourseInfo $course): void
+    {
+        if ((int) $course->classroom_info_id !== (int) $classroom->id) {
+            abort(403, 'アクセス権限がありません。');
+        }
     }
 }

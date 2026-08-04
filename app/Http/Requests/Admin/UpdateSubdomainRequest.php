@@ -22,6 +22,8 @@ class UpdateSubdomainRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => 'required|string|max:255',
+            'name_kana' => 'required|string|max:255|regex:/^[ァ-ヶー　]+$/u',
             'system_name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'voucher_amount' => 'required|integer|min:0',
@@ -53,6 +55,11 @@ class UpdateSubdomainRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.required' => '自治体名を入力してください。',
+            'name.max' => '自治体名は255文字以内で入力してください。',
+            'name_kana.required' => '自治体名カナを入力してください。',
+            'name_kana.max' => '自治体名カナは255文字以内で入力してください。',
+            'name_kana.regex' => '自治体名カナは全角カナで入力してください。',
             'system_name.required' => 'システム名を入力してください。',
             'system_name.max' => 'システム名は255文字以内で入力してください。',
             'description.max' => '説明は1000文字以内で入力してください。',

@@ -12,6 +12,7 @@ class BusinessInfo extends Model
 
     /**
      * 申請者種別ごとの必須書類キーと表示ラベル・注意文（複数行可）
+     * {subdomain_name} は Subdomains.name に置換される
      *
      * @var array<string, array<string, array{label: string, notice: array<int, string>}>>
      */
@@ -19,7 +20,7 @@ class BusinessInfo extends Model
         'corporation' => [
             'service_and_fees' => ['label' => 'サービス内容及び費用が記載された文書', 'notice' => ['チラシ・パンフレット等']],
             'corporation_current_certificate' => ['label' => '法人の現在事項全部証明書', 'notice' => ['履歴事項全部証明書でも可／発行後３ヵ月以内']],
-            'corporation_citizen_tax_certificate' => ['label' => '市税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・本市で事業を行っていないなどの理由により証明書がない場合は、申立書を添付してください。']],
+            'corporation_citizen_tax_certificate' => ['label' => '{subdomain_name}税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・本市で事業を行っていないなどの理由により証明書がない場合は、申立書を添付してください。']],
             'bank_account_copy' => ['label' => '振込先の銀行等の通帳のコピー等', 'notice' => ['振込先の銀行等・支店・口座番号・名義人が全て記載されているページ。口座名義人は「法人名」又は「法人名＋法人代表者名」のものに限る。']],
         ],
         'voluntary_group' => [
@@ -27,14 +28,14 @@ class BusinessInfo extends Model
             'representative_id_copy' => ['label' => '団体代表者の公的身分証明書のコピー', 'notice' => ['運転免許証・パスポート・マイナンバーカード（マイナンバー部分は黒塗りしたもの）等の顔写真付きのものに限る。']],
             'group_rules' => ['label' => '団体の規約等', 'notice' => []],
             'group_officers_list' => ['label' => '団体の役員名簿', 'notice' => []],
-            'representative_citizen_tax_certificate' => ['label' => '団体代表者の市税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・収益事業を行っていないなどの理由により証明書がない場合は、申立書を添付してください。']],
+            'representative_citizen_tax_certificate' => ['label' => '団体代表者の{subdomain_name}税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・収益事業を行っていないなどの理由により証明書がない場合は、申立書を添付してください。']],
             'corporate_tax_certificate_no2' => ['label' => '直近の法人税納税証明書その２', 'notice' => ['ただし，事業開始後１事業年度未満等の理由で，法人税納税証明書その２の提出が困難な場合は，次の書類を提出', '・収益事業開始届出書の写し（所轄税務署の受付印のあるもの）※収益事業のない場合は不要', '・その他市がサービスの実態を確認できると認めた書類', '・収益事業を行っていないなどの理由により証明書がない場合は、申立書を添付してください。']],
             'bank_account_copy' => ['label' => '振込先の銀行等の通帳のコピー等', 'notice' => ['振込先の銀行等・支店・口座番号・名義人が全て記載されているページ。口座名義人は原則「団体名」又は「団体名＋団体代表者名」のものに限る']],
         ],
         'individual' => [
             'service_and_fees' => ['label' => 'サービス内容及び費用が記載された文書', 'notice' => ['チラシ・パンフレット等']],
             'id_copy' => ['label' => '公的身分証明書のコピー', 'notice' => ['運転免許証・パスポート・マイナンバーカード（マイナンバー部分は黒塗りしたもの）等の顔写真付きのものに限る。']],
-            'citizen_tax_certificate' => ['label' => '市税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・市に納税義務がないなどの理由により証明書がない場合は、申立書を添付してください。']],
+            'citizen_tax_certificate' => ['label' => '{subdomain_name}税に係る徴収金（本税及び延滞金・督促手数料）を滞納していないことの証明', 'notice' => ['・申請時において所得できる直近の年度のもの', '・{subdomain_name}に納税義務がないなどの理由により証明書がない場合は、申立書を添付してください。']],
             'income_tax_return_copy' => ['label' => '直近の所得税確定申告書の写し（第一表と第二表（控）の写し）', 'notice' => ['納税手続をe-TAXで行っている場合：受付日時・受付番号が記載されているもの', '納税手続を税務署で行っている場合：所轄税務署の受付印のあるもの。', 'ただし，事業開始後１事業年度未満等の理由で，所得税確定申告書の写しの提出が困難な場合は，次の書類を提出', '・個人事業の開業・廃業等届出書の写し（所轄税務署の受付印のあるもの）', '・その他市がサービスの実態を確認できると認めた書類']],
             'bank_account_copy' => ['label' => '振込先の銀行等の通帳のコピー等', 'notice' => ['振込先の銀行等・支店・口座番号・名義人が全て記載されているページ。口座名義人は原則「団体名」又は「団体名＋団体代表者名」のものに限る']],
         ],
@@ -119,11 +120,12 @@ class BusinessInfo extends Model
     /**
      * 申請者種別と書類キーから表示ラベルを取得
      */
-    public static function getDocumentLabel(string $applicantType, string $key): string
+    public static function getDocumentLabel(string $applicantType, string $key, ?string $subdomainName = null): string
     {
         $item = self::REQUIRED_DOCUMENTS_BY_APPLICANT_TYPE[$applicantType][$key] ?? null;
+        $label = is_array($item) ? ($item['label'] ?? $key) : (string) $item;
 
-        return is_array($item) ? ($item['label'] ?? $key) : (string) $item;
+        return self::resolveDocumentText($label, $subdomainName);
     }
 
     /**
@@ -131,7 +133,7 @@ class BusinessInfo extends Model
      *
      * @return array<int, string>
      */
-    public static function getDocumentNotice(string $applicantType, string $key): array
+    public static function getDocumentNotice(string $applicantType, string $key, ?string $subdomainName = null): array
     {
         $item = self::REQUIRED_DOCUMENTS_BY_APPLICANT_TYPE[$applicantType][$key] ?? null;
         if (! is_array($item)) {
@@ -139,10 +141,16 @@ class BusinessInfo extends Model
         }
         $notice = $item['notice'] ?? [];
         if (is_string($notice)) {
-            return $notice === '' ? [] : [$notice];
+            $notice = $notice === '' ? [] : [$notice];
         }
 
-        return array_values(array_filter($notice, fn ($line) => (string) $line !== ''));
+        return array_values(array_filter(
+            array_map(
+                fn ($line) => self::resolveDocumentText((string) $line, $subdomainName),
+                $notice
+            ),
+            fn ($line) => (string) $line !== ''
+        ));
     }
 
     /**
@@ -150,19 +158,36 @@ class BusinessInfo extends Model
      *
      * @return array<string, array{label: string, notice: array<int, string>}>
      */
-    public static function getDocumentLabelsForApplicantType(string $applicantType): array
+    public static function getDocumentLabelsForApplicantType(string $applicantType, ?string $subdomainName = null): array
     {
         $items = self::REQUIRED_DOCUMENTS_BY_APPLICANT_TYPE[$applicantType] ?? [];
         $result = [];
         foreach ($items as $key => $item) {
             $notice = $item['notice'] ?? [];
             $result[$key] = [
-                'label' => $item['label'] ?? $key,
-                'notice' => is_array($notice) ? array_values(array_filter($notice, fn ($line) => (string) $line !== '')) : ($notice === '' ? [] : [(string) $notice]),
+                'label' => self::resolveDocumentText($item['label'] ?? $key, $subdomainName),
+                'notice' => is_array($notice)
+                    ? array_values(array_filter(
+                        array_map(
+                            fn ($line) => self::resolveDocumentText((string) $line, $subdomainName),
+                            $notice
+                        ),
+                        fn ($line) => (string) $line !== ''
+                    ))
+                    : ($notice === '' ? [] : [self::resolveDocumentText((string) $notice, $subdomainName)]),
             ];
         }
 
         return $result;
+    }
+
+    private static function resolveDocumentText(string $text, ?string $subdomainName): string
+    {
+        if ($subdomainName === null || $subdomainName === '') {
+            return $text;
+        }
+
+        return str_replace('{subdomain_name}', $subdomainName, $text);
     }
 
     /**
@@ -274,8 +299,9 @@ class BusinessInfo extends Model
         $documents = $this->documents ?? [];
         $info = $documents[$documentKey] ?? [];
         $applicantType = $this->applicant_type ?? '';
-        $title = self::getDocumentLabel($applicantType, $documentKey);
-        $notice = self::getDocumentNotice($applicantType, $documentKey);
+        $subdomainName = $this->subdomain?->name;
+        $title = self::getDocumentLabel($applicantType, $documentKey, $subdomainName);
+        $notice = self::getDocumentNotice($applicantType, $documentKey, $subdomainName);
 
         return [
             'title' => $title,

@@ -104,6 +104,14 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test.localhost'.route($name, $params, false);
+    }
+
     public function test_new_business_defaults_is_public_funds_transfer_target_to_false(): void
     {
         $this->assertFalse($this->business->is_public_funds_transfer_target);
@@ -112,7 +120,7 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
     public function test_edit_page_shows_admin_remarks_and_attachment_section(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.edit', $this->business));
+            ->get($this->url('admin.business.edit', [$this->business]));
 
         $response->assertStatus(200);
         $response->assertSee('管理者用備考');
@@ -130,9 +138,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['is_public_funds_transfer_target'] = '1';
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertTrue($this->business->is_public_funds_transfer_target);
@@ -143,9 +151,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload = $this->validBusinessPayload();
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertFalse($this->business->is_public_funds_transfer_target);
@@ -157,9 +165,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['admin_remarks'] = '管理者用の備考テキストです。';
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertSame('管理者用の備考テキストです。', $this->business->admin_remarks);
@@ -173,9 +181,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['admin_attachments'] = [$file];
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertIsArray($this->business->admin_attachments);
@@ -205,7 +213,7 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.admin-attachment.download', $this->business).'?key='.urlencode($s3Key));
+            ->get($this->url('admin.business.admin-attachment.download', [$this->business]).'?key='.urlencode($s3Key));
 
         $response->assertStatus(200);
         $response->assertHeader('content-disposition');
@@ -232,9 +240,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['admin_attachment_remove'] = [$s3Key];
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertSame([], $this->business->admin_attachments);
@@ -261,7 +269,7 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['admin_attachments'] = $files;
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
         $response->assertRedirect();
         $response->assertSessionHasErrors('admin_attachments');
@@ -296,9 +304,9 @@ class BusinessManagementAdminRemarksAttachmentTest extends TestCase
         $payload['business_name'] = '審査通過テスト事業者';
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $business), $payload);
+            ->put($this->url('admin.business.update', [$business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $business->refresh();
         $this->assertNotNull($business->approved_at);

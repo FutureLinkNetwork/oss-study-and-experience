@@ -10,22 +10,26 @@ use App\Models\BusinessInfo;
 use App\Models\Contact;
 use App\Models\CourseRequest;
 use App\Models\Inquiry;
+use App\Services\SubdomainService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 管理画面のダッシュボードを表示
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = \App\Models\User::with(['role', 'subdomain'])->find(Auth::id());
 
-        // ユーザーの権限に応じて利用可能なメニューを決定
-        $availableMenus = $this->getAvailableMenus($user);
+        // 現在のサブドメイン情報取得
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
 
-        // サブドメイン情報取得
-        $subdomain = $user->subdomain;
+        // ユーザーの権限に応じて利用可能なメニューを決定
+        $availableMenus = $this->getAvailableMenus($user, $subdomain->id);
 
         return view('admin.dashboard', compact('user', 'availableMenus', 'subdomain'));
     }
@@ -33,7 +37,7 @@ class DashboardController extends Controller
     /**
      * ユーザーの権限に応じた利用可能メニューを取得
      */
-    private function getAvailableMenus($user): array
+    private function getAvailableMenus($user, int $subdomainId): array
     {
         $menus = [];
 
@@ -45,7 +49,7 @@ class DashboardController extends Controller
                 'route' => 'admin.contacts.index',
                 'icon' => '📧',
                 'permission_level' => 60,
-                'badge' => Contact::where('subdomain_id', $user->subdomain_id)->unconfirmed()->count(),
+                'badge' => Contact::where('subdomain_id', $subdomainId)->unconfirmed()->count(),
             ];
             $menus['お問い合わせ'][] = [
                 'name' => '問い合わせ（利用者・事業者）',
@@ -53,7 +57,7 @@ class DashboardController extends Controller
                 'route' => 'admin.inquiries.index',
                 'icon' => '✉️',
                 'permission_level' => 60,
-                'badge' => Inquiry::forSubdomain($user->subdomain_id)->where('status', 'pending')->count(),
+                'badge' => Inquiry::forSubdomain($subdomainId)->where('status', 'pending')->count(),
             ];
         }
 
@@ -65,7 +69,7 @@ class DashboardController extends Controller
                 'route' => 'admin.course-requests.index',
                 'icon' => '📝',
                 'permission_level' => 40,
-                'badge' => CourseRequest::where('subdomain_id', $user->subdomain_id)->unconfirmed()->count(),
+                'badge' => CourseRequest::where('subdomain_id', $subdomainId)->unconfirmed()->count(),
             ];
         }
 
@@ -77,7 +81,7 @@ class DashboardController extends Controller
                 'route' => 'admin.business.index',
                 'icon' => '🏢',
                 'permission_level' => 40,
-                'badge' => BusinessInfo::where('subdomain_id', $user->subdomain_id)->where('status', '未着手')->count(),
+                'badge' => BusinessInfo::where('subdomain_id', $subdomainId)->where('status', '未着手')->count(),
             ];
         }
 
@@ -89,7 +93,7 @@ class DashboardController extends Controller
                 'route' => 'admin.payments.index',
                 'icon' => '💰',
                 'permission_level' => 40,
-                'badge' => AccountingReportDownload::where('subdomain_id', $user->subdomain_id)->undownloaded()->count(),
+                'badge' => AccountingReportDownload::where('subdomain_id', $subdomainId)->undownloaded()->count(),
             ];
         }
 
@@ -123,7 +127,7 @@ class DashboardController extends Controller
                 'route' => 'admin.beneficiaries.index',
                 'icon' => '👤',
                 'permission_level' => 40,
-                'badge' => Beneficiary::where('subdomain_id', $user->subdomain_id)->whereIn('status', ['決定通知書未送信', '決定通知書送信待ち', '決定通知書送信失敗'])->count(),
+                'badge' => Beneficiary::where('subdomain_id', $subdomainId)->whereIn('status', ['決定通知書未送信', '決定通知書送信待ち', '決定通知書送信失敗'])->count(),
             ];
         }
 
@@ -210,7 +214,7 @@ class DashboardController extends Controller
     /**
      * サブドメイン編集画面を表示
      */
-    public function edit()
+    public function edit(Request $request)
     {
         $user = \App\Models\User::with(['role', 'subdomain'])->find(Auth::id());
 
@@ -219,12 +223,8 @@ class DashboardController extends Controller
             abort(403, 'この機能にアクセスする権限がありません。');
         }
 
-        // サブドメイン情報取得
-        $subdomain = $user->subdomain;
-
-        if (! $subdomain) {
-            abort(404, 'サブドメインが見つかりません。');
-        }
+        // 現在のサブドメイン情報取得
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
 
         return view('admin.subdomain-edit', compact('user', 'subdomain'));
     }
@@ -241,12 +241,8 @@ class DashboardController extends Controller
             abort(403, 'この機能にアクセスする権限がありません。');
         }
 
-        // サブドメイン情報取得
-        $subdomain = $user->subdomain;
-
-        if (! $subdomain) {
-            abort(404, 'サブドメインが見つかりません。');
-        }
+        // 現在のサブドメイン情報取得
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
 
         // 学年設定を処理
         $grades = $request->input('grades', []);
@@ -259,6 +255,8 @@ class DashboardController extends Controller
 
         // サブドメイン情報を更新
         $subdomain->update([
+            'name' => $request->name,
+            'name_kana' => $request->name_kana,
             'system_name' => $request->system_name,
             'description' => $request->description,
             'voucher_amount' => $request->voucher_amount,

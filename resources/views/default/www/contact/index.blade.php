@@ -17,8 +17,8 @@
                 <li><a href="/">TOP</a></li>
                 <li><span>お問い合わせ</span></li>
             </ul>
-            <div class="uk-container uk-margin-large">
-			<h2 class="uk-h2 uk-text-center"><span class="ttl anime"><img src="{{ asset('subdomain_assets/www/images/ttl_inquiry_h.png') }}" alt="お問い合わせ"></span></h2>
+            <div class="uk-container">
+			<h2 class="uk-h2 uk-text-center"><span class="ttl anime">お問い合わせ</span></h2>
 				<div class="content_wrap uk-clearfix anime" uk-grid>
 					<div class="content_inner uk-flex-wrap-stretch">
 						<div class="illust_01 other_news"><img src="{{ asset('subdomain_assets/www/images/img_about_01.png') }}" width="165" alt=""></div>

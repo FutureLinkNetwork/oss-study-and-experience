@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notice;
 use App\Models\Subdomain;
 use App\Services\S3KeyPrefix;
+use App\Services\SubdomainService;
 use GuzzleHttp\Client;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ use Illuminate\View\View;
 class NoticeController extends Controller
 {
     use \App\Http\Controllers\Concerns\StreamsNoticeAttachment;
+
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
 
     /**
      * お知らせ一覧表示
@@ -41,8 +44,8 @@ class NoticeController extends Controller
             ->notDeleted()
             ->orderBy('id', 'desc');
 
-        // 自分のサブドメインのみ
-        $query->forSubdomain($user->subdomain_id);
+        // 現在のサブドメインのみ
+        $query->forSubdomain($this->subdomainService->currentSubdomainId($request));
 
         // 検索フィルター
         if ($request->filled('search')) {
@@ -68,7 +71,7 @@ class NoticeController extends Controller
     /**
      * お知らせ作成フォーム表示
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         // 認証チェック
         if (! Auth::check()) {
@@ -84,13 +87,13 @@ class NoticeController extends Controller
         }
 
         // 現在のサブドメインの情報を取得
-        $subdomain = json_decode(collect([$user->subdomain]), true);
-        $latitude = $subdomain[0]['latitude'] ?? null;
-        $longitude = $subdomain[0]['longitude'] ?? null;
+        $currentSubdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $latitude = $currentSubdomain->latitude ?? null;
+        $longitude = $currentSubdomain->longitude ?? null;
 
         return view('admin.notices.form', [
             'notice' => null,
-            'subdomain_id' => $user->subdomain_id,
+            'subdomain_id' => $currentSubdomain->id,
             'latitude' => $latitude,
             'longitude' => $longitude,
             'pageTitle' => 'お知らせ作成',
@@ -119,16 +122,7 @@ class NoticeController extends Controller
         }
 
         $validated = $request->validate([
-            'subdomain_id' => [
-                'required',
-                'exists:subdomains,id',
-                function ($attribute, $value, $fail) use ($user, $role) {
-                    // サブドメイン管理者・オペレーターは自分のサブドメインのみ
-                    if ($role->level < 100 && $value != $user->subdomain_id) {
-                        $fail('指定されたサブドメインは選択できません。');
-                    }
-                },
-            ],
+            'subdomain_id' => 'required|exists:subdomains,id',
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'notice_date' => 'required|date',
@@ -152,6 +146,8 @@ class NoticeController extends Controller
             'attachment.mimetypes' => '添付はPDF、Word（.doc/.docx）、Excel（.xls/.xlsx）のみ対応しています。',
         ]);
 
+        // サブドメインはホストの現在のサブドメインに強制する（他サブドメインへの割り当てを防止）
+        $validated['subdomain_id'] = $this->subdomainService->currentSubdomainId($request);
         $validated['created_user'] = $user->id;
         $validated['updated_user'] = $user->id;
 
@@ -168,7 +164,7 @@ class NoticeController extends Controller
     /**
      * お知らせ編集フォーム表示
      */
-    public function edit(Notice $notice): View
+    public function edit(Request $request, Notice $notice): View
     {
         // 認証チェック
         if (! Auth::check()) {
@@ -183,26 +179,23 @@ class NoticeController extends Controller
             abort(403, 'アクセス権限がありません。');
         }
 
-        // アクセス権限チェック
-        if ($role->level < 100 && $notice->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $notice);
 
         // 現在のサブドメインの情報を取得
-        $subdomain = json_decode(collect([$user->subdomain]), true);
+        $currentSubdomain = $this->subdomainService->getCurrentSubdomain($request);
 
         // 緯度軽度が空の場合はサブドメインの値をセット
         if ($notice->latitude && $notice->longitude) {
             $latitude = $notice->latitude;
             $longitude = $notice->longitude;
         } else {
-            $latitude = $subdomain[0]['latitude'];
-            $longitude = $subdomain[0]['longitude'];
+            $latitude = $currentSubdomain->latitude;
+            $longitude = $currentSubdomain->longitude;
         }
 
         return view('admin.notices.form', [
             'notice' => $notice,
-            'subdomain_id' => $user->subdomain_id,
+            'subdomain_id' => $currentSubdomain->id,
             'latitude' => $latitude,
             'longitude' => $longitude,
             'pageTitle' => 'お知らせ編集',
@@ -230,23 +223,11 @@ class NoticeController extends Controller
             abort(403, 'アクセス権限がありません。');
         }
 
-        // アクセス権限チェック
-        if ($role->level < 100 && $notice->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $notice);
 
         try {
             $validated = $request->validate([
-                'subdomain_id' => [
-                    'required',
-                    'exists:subdomains,id',
-                    function ($attribute, $value, $fail) use ($user, $role) {
-                        // サブドメイン管理者・オペレーターは自分のサブドメインのみ
-                        if ($role->level < 100 && $value != $user->subdomain_id) {
-                            $fail('指定されたサブドメインは選択できません。');
-                        }
-                    },
-                ],
+                'subdomain_id' => 'required|exists:subdomains,id',
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'notice_date' => 'required|date',
@@ -281,6 +262,8 @@ class NoticeController extends Controller
                 $validated['show_on_business_dashboard'] = false;
             }
 
+            // サブドメインはホストの現在のサブドメインに強制する（他サブドメインへの割り当てを防止）
+            $validated['subdomain_id'] = $this->subdomainService->currentSubdomainId($request);
             $validated['updated_user'] = $user->id;
 
             // 添付削除または差し替え: 既存S3オブジェクトを削除
@@ -318,7 +301,7 @@ class NoticeController extends Controller
     /**
      * お知らせ削除処理（論理削除）
      */
-    public function destroy(Notice $notice): RedirectResponse
+    public function destroy(Request $request, Notice $notice): RedirectResponse
     {
         // 認証チェック
         if (! Auth::check()) {
@@ -333,10 +316,7 @@ class NoticeController extends Controller
             abort(403, 'アクセス権限がありません。');
         }
 
-        // アクセス権限チェック
-        if ($role->level < 100 && $notice->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $notice);
 
         $notice->update([
             'is_deleted' => true,
@@ -542,7 +522,7 @@ class NoticeController extends Controller
     /**
      * 管理画面: お知らせ添付ファイルをダウンロード
      */
-    public function downloadAttachment(Notice $notice): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function downloadAttachment(Request $request, Notice $notice): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         if (! Auth::check()) {
             abort(403, 'ログインが必要です。');
@@ -553,9 +533,8 @@ class NoticeController extends Controller
         if (! $role || $role->level < 40) {
             abort(403, 'アクセス権限がありません。');
         }
-        if ($role->level < 100 && $notice->subdomain_id !== $user->subdomain_id) {
-            abort(403, 'アクセス権限がありません。');
-        }
+
+        $this->subdomainService->ensureBelongsToCurrentSubdomain($request, $notice);
 
         if (! $notice->hasAttachment()) {
             abort(404, '添付ファイルがありません。');

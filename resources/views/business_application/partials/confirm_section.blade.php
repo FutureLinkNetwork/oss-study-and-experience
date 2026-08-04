@@ -124,7 +124,7 @@
             <!-- 必須書類アップロード（確認表示） -->
             @php
                 $confirmApplicantType = $data['applicant_type'] ?? '';
-                $confirmDocumentLabels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($confirmApplicantType);
+                $confirmDocumentLabels = \App\Models\BusinessInfo::getDocumentLabelsForApplicantType($confirmApplicantType, $subdomain?->name);
                 $confirmUploadedDocuments = $data['uploaded_documents'] ?? [];
             @endphp
             <div class="md:col-span-2 mt-6">

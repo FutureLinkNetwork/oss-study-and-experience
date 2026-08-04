@@ -8,17 +8,18 @@ use App\Models\AdminDownload;
 use App\Models\BusinessInfo;
 use App\Models\PaymentAggregate;
 use App\Services\PaymentNoticePdfService;
+use App\Services\SubdomainService;
 use App\Services\ZenginFormatService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
     public function __construct(
         protected ZenginFormatService $zenginFormatService,
-        protected PaymentNoticePdfService $pdfService
+        protected PaymentNoticePdfService $pdfService,
+        protected readonly SubdomainService $subdomainService
     ) {}
 
     /**
@@ -28,11 +29,8 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            return redirect()->route('admin.dashboard')->with('error', 'サブドメインが設定されていません。');
-        }
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $subdomainId = $subdomain->id;
 
         $availableMonths = PaymentAggregate::query()
             ->where('subdomain_id', $subdomainId)
@@ -69,8 +67,6 @@ class PaymentController extends Controller
                 ->first();
         }
 
-        $subdomain = $user->subdomain;
-
         $latestAdminDownload = AdminDownload::query()
             ->forSubdomain($subdomainId)
             ->orderByDesc('created_at')
@@ -95,18 +91,14 @@ class PaymentController extends Controller
      */
     public function downloadZengin(Request $request)
     {
-        $user = Auth::user();
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            return redirect()->route('admin.dashboard')->with('error', 'サブドメインが設定されていません。');
-        }
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $subdomainId = $subdomain->id;
 
         $month = $request->get('month');
         if (! $month || ! preg_match('/^\d{4}-\d{2}$/', $month)) {
             return redirect()->route('admin.payments.index')->with('error', '申込月を指定してください。');
         }
 
-        $subdomain = $user->subdomain;
         if (! $subdomain->hasZenginHeaderConfigured()) {
             return redirect()
                 ->route('admin.payments.index', ['month' => $month])
@@ -162,11 +154,8 @@ class PaymentController extends Controller
      */
     public function downloadPdf(Request $request): StreamedResponse|\Illuminate\Http\RedirectResponse
     {
-        $user = Auth::user();
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            return redirect()->route('admin.dashboard')->with('error', 'サブドメインが設定されていません。');
-        }
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $subdomainId = $subdomain->id;
 
         $month = $request->get('month');
         if (! $month || ! preg_match('/^\d{4}-\d{2}$/', $month)) {
@@ -200,7 +189,6 @@ class PaymentController extends Controller
         }
 
         try {
-            $subdomain = $user->subdomain;
             $path = $this->pdfService->generate($businessInfo, $subdomain, $month, $aggregates->all());
             $safeName = preg_replace('/[\x00-\x1f\\\\\/:*?"<>|]/u', '_', $businessInfo->business_name ?? '');
             $safeName = trim($safeName) !== '' ? $safeName : '事業者'.$businessId;

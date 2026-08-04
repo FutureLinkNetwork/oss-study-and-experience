@@ -140,7 +140,7 @@ class ReportControllerTest extends TestCase
         $this->assertCount(12, $viewData['applicationApprovalChart']['businessApprovalCounts']);
     }
 
-    public function test_report_index_returns_404_when_user_has_no_subdomain(): void
+    public function test_report_index_returns_404_when_host_subdomain_does_not_exist(): void
     {
         Subdomain::factory()->create(['subdomain' => 'www']);
         $role = Role::firstOrCreate(

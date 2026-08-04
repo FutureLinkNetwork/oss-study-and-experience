@@ -103,10 +103,18 @@ class BusinessManagementGovernmentAgencyApplicantTypeTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test.localhost'.route($name, $params, false);
+    }
+
     public function test_create_form_shows_government_agency_applicant_type(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.create'));
+            ->get($this->url('admin.business.create'));
 
         $response->assertStatus(200);
         $response->assertSee('行政機関', false);
@@ -116,7 +124,7 @@ class BusinessManagementGovernmentAgencyApplicantTypeTest extends TestCase
     public function test_edit_form_shows_government_agency_applicant_type(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.edit', $this->business));
+            ->get($this->url('admin.business.edit', [$this->business]));
 
         $response->assertStatus(200);
         $response->assertSee('行政機関', false);
@@ -129,9 +137,9 @@ class BusinessManagementGovernmentAgencyApplicantTypeTest extends TestCase
         $payload['applicant_type'] = 'government_agency';
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertSame('government_agency', $this->business->applicant_type);
@@ -140,15 +148,17 @@ class BusinessManagementGovernmentAgencyApplicantTypeTest extends TestCase
     public function test_update_syncs_representative_name_from_family_and_given(): void
     {
         $payload = $this->validBusinessPayload();
+        $payload['representative_name'] = '';
+        $payload['representative_name_kana'] = '';
         $payload['representative_family_name'] = '山田';
         $payload['representative_given_name'] = '太郎';
         $payload['representative_family_name_kana'] = 'ヤマダ';
         $payload['representative_given_name_kana'] = 'タロウ';
 
         $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.business.update', $this->business), $payload);
+            ->put($this->url('admin.business.update', [$this->business]), $payload);
 
-        $response->assertRedirect(route('admin.business.index'));
+        $response->assertRedirect($this->url('admin.business.index'));
 
         $this->business->refresh();
         $this->assertSame('山田 太郎', $this->business->representative_name);

@@ -62,6 +62,14 @@ class BusinessManagementIndexYoungestClassroomTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function url(string $name, array $params = []): string
+    {
+        return 'http://test-youngest-classroom.localhost'.route($name, $params, false);
+    }
+
     public function test_admin_business_index_shows_youngest_classroom_name_instead_of_phone(): void
     {
         // 「IDが一番若い」= 最小のIDを持つ教室名を表示する
@@ -76,12 +84,47 @@ class BusinessManagementIndexYoungestClassroomTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.index'));
+            ->get($this->url('admin.business.index'));
 
         $response->assertStatus(200);
         $response->assertSee('最若い教室名');
         $response->assertSee($classroom1->classroom_name);
         $response->assertDontSee($this->business->phone);
         $response->assertDontSee($classroom2->classroom_name);
+    }
+
+    public function test_admin_business_index_filters_businesses_by_logged_in_subdomain(): void
+    {
+        $otherSubdomain = Subdomain::factory()->create([
+            'subdomain' => 'other-subdomain',
+            'is_active' => true,
+        ]);
+
+        BusinessInfo::create([
+            'user_id' => null,
+            'subdomain_id' => $otherSubdomain->id,
+            'applicant_type' => 'corporation',
+            'business_name' => '他サブドメイン事業者',
+            'business_name_kana' => 'タサブドメインジギョウシャ',
+            'representative_name' => '他代表',
+            'representative_name_kana' => 'タダイヒョウ',
+            'postal_code' => '664-0009',
+            'prefecture' => '兵庫県',
+            'city' => '伊丹市',
+            'address1' => '荻野9-9-9',
+            'phone' => '072-999-9999',
+            'email' => 'other-subdomain-business@example.com',
+            'apply' => 1,
+            'is_active' => 1,
+            'status' => '利用中',
+            'qr_only' => false,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get($this->url('admin.business.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee($this->business->business_name);
+        $response->assertDontSee('他サブドメイン事業者');
     }
 }

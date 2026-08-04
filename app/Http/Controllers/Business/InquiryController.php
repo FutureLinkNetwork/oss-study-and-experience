@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInquiryRequest;
 use App\Mail\InquiryReceivedMail;
 use App\Models\Inquiry;
+use App\Services\SubdomainService;
 use App\Traits\HandlesAuth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,9 +98,12 @@ class InquiryController extends Controller
         }
 
         $subdomain = $this->getCurrentSubdomain($request);
-        if ($inquiry->subdomain_id !== $subdomain->id) {
-            abort(403, 'この問い合わせを表示する権限がありません。');
-        }
+        app(SubdomainService::class)->ensureBelongsToCurrentSubdomain(
+            $request,
+            $inquiry,
+            403,
+            'この問い合わせを表示する権限がありません。'
+        );
 
         return view('business.inquiries.show', compact('subdomain', 'inquiry'));
     }

@@ -71,8 +71,10 @@ class BusinessManagementCreateCourseFormTest extends TestCase
 
     public function test_create_course_form_renders_when_course_is_null(): void
     {
+        $path = route('admin.business.create-course', [$this->business, $this->classroom], false);
+
         $response = $this->actingAs($this->adminUser)
-            ->get(route('admin.business.create-course', [$this->business, $this->classroom]));
+            ->get('http://test-create-course.localhost'.$path);
 
         $response->assertStatus(200);
         $response->assertViewIs('admin.business.course-form');

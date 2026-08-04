@@ -23,6 +23,7 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HelloController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\NoticeController;
+use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\SessionKeepAliveController;
 use App\Http\Controllers\User\CourseController as UserCourseController;
 use App\Http\Controllers\User\InquiryController as UserInquiryController;
@@ -47,6 +48,7 @@ Route::prefix('notices')->name('notices.')->group(function () {
 });
 
 Route::get('/about', [AboutController::class, 'index'])->name('about');
+Route::get('/privacy_policy', [PrivacyPolicyController::class, 'index'])->name('privacy_policy');
 
 // FAX
 Route::get('/faq_user', [FaqController::class, 'user'])->name('faq_user');

@@ -7,6 +7,7 @@ use App\Models\ClassroomInfo;
 use App\Models\CourseCategory;
 use App\Models\CourseParentCategory;
 use App\Models\CourseRequest;
+use App\Services\SubdomainService;
 use App\Traits\HandlesAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -40,12 +41,13 @@ class CourseController extends Controller
         }
         $grade = $request->get('grade');
 
-        // 承認済み・有効な教室を取得するベースクエリ
+        // 承認済み・有効な教室を取得するベースクエリ（現在のサブドメインの事業者に紐づく教室のみ）
         $classroomsQuery = ClassroomInfo::query()
             ->where('apply', 1) // 承認済み
             ->where('is_active', 1) // 有効
-            ->whereHas('businessInfo', function ($query) {
-                $query->where('apply', 1)
+            ->whereHas('businessInfo', function ($query) use ($subdomain) {
+                $query->where('subdomain_id', $subdomain->id)
+                    ->where('apply', 1)
                     ->where('is_active', 1);
             })
             ->with(['businessInfo', 'lessonCategoryInfo', 'lessonCategoryInfo.parentCategory']);
@@ -150,8 +152,9 @@ class CourseController extends Controller
             ->where('is_active', 1)
             ->whereNotNull('classroom_latitude')
             ->whereNotNull('classroom_longitude')
-            ->whereHas('businessInfo', function ($query) {
-                $query->where('apply', 1)
+            ->whereHas('businessInfo', function ($query) use ($subdomain) {
+                $query->where('subdomain_id', $subdomain->id)
+                    ->where('apply', 1)
                     ->where('is_active', 1);
             })
             ->with(['lessonCategoryInfo']);
@@ -260,6 +263,8 @@ class CourseController extends Controller
             ]);
             abort(404);
         }
+
+        app(SubdomainService::class)->ensureBelongsToCurrentSubdomain($request, $business, 404);
 
         // 有効なコースのみ取得（期間判定含む）
         $currentDate = Carbon::now();

@@ -11,6 +11,7 @@ use App\Models\CourseInfo;
 use App\Models\UserApplication;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
+use App\Services\SubdomainService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
+    public function __construct(protected readonly SubdomainService $subdomainService) {}
+
     /**
      * 管理画面レポート（過去12暦月の月次指標）を表示
      */
@@ -29,12 +32,8 @@ class ReportController extends Controller
             abort(403, 'この機能にアクセスする権限がありません。');
         }
 
-        $subdomainId = $user->subdomain_id;
-        if (! $subdomainId) {
-            abort(404, 'サブドメインが見つかりません。');
-        }
-
-        $subdomain = $user->subdomain;
+        $subdomain = $this->subdomainService->getCurrentSubdomain($request);
+        $subdomainId = $subdomain->id;
 
         // 直近12暦月（例: 今日が2026/3/10 → 2025/4 〜 2026/3）
         $months = $this->buildLast12CalendarMonths();
