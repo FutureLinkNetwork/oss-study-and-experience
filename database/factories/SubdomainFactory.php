@@ -21,6 +21,7 @@ class SubdomainFactory extends Factory
             'name' => fake()->company(),
             'name_kana' => 'テストジチタイ',
             'system_name' => fake()->company().'システム',
+            'invoice_preamble' => '下記のとおり請求します。',
             'description' => fake()->optional()->sentence(),
             'is_active' => true,
             'settings' => null,

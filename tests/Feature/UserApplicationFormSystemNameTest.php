@@ -36,4 +36,27 @@ class UserApplicationFormSystemNameTest extends TestCase
         $response->assertSee('私は、'.$systemName.'における助成を申請するにあたり', false);
         $response->assertDontSee('伊丹市子どもの習い事応援事業', false);
     }
+
+    /**
+     * 利用者申請完了画面に Subdomain の system_name が表示されること
+     */
+    public function test_complete_displays_subdomain_system_name(): void
+    {
+        config(['app.key' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=']);
+        config(['recaptcha.enabled' => false]);
+
+        $systemName = 'テスト市子どもの習い事応援事業';
+
+        Subdomain::factory()->create([
+            'subdomain' => 'test',
+            'system_name' => $systemName,
+            'is_active' => true,
+        ]);
+
+        $response = $this->get('http://test.localhost/user_application/complete');
+
+        $response->assertStatus(200);
+        $response->assertSee('なお、この申請は「'.$systemName.'」にかかる申請で、「習い事等の申込」をするものではありません。', false);
+        $response->assertDontSee('伊丹市子どもの習い事応援事業', false);
+    }
 }

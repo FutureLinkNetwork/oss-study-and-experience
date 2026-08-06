@@ -137,6 +137,7 @@ class GenerateMonthlyAccountingReportsCommandTest extends TestCase
             'address1' => '1-1',
             'phone' => '0300000000',
             'email' => 'acct-b@example.com',
+            'is_public_funds_transfer_target' => true,
             'apply' => 1,
             'is_active' => 1,
         ]);

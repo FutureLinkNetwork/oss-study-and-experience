@@ -258,6 +258,7 @@ class DashboardController extends Controller
             'name' => $request->name,
             'name_kana' => $request->name_kana,
             'system_name' => $request->system_name,
+            'invoice_preamble' => $request->invoice_preamble,
             'description' => $request->description,
             'voucher_amount' => $request->voucher_amount,
             'voucher_expiry' => $request->voucher_expiry,

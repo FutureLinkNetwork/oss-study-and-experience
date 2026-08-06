@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '習い事クーポン管理システム')
+@section('title', '事業者マイページ｜'.$subdomain->system_name ?? '')
 
 @section('content')
 <div class="min-h-screen bg-blue-100">

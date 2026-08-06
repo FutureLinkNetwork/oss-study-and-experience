@@ -81,6 +81,17 @@
                         @enderror
                     </div>
 
+                    <!-- 請求書前文 -->
+                    <div class="field-group">
+                        <label for="invoice_preamble" class="field-label">請求書前文</label>
+                        <textarea name="invoice_preamble" id="invoice_preamble" rows="3"
+                                  class="field-base field-w-100 @error('invoice_preamble') error @enderror">{{ old('invoice_preamble', $subdomain->invoice_preamble ?? '') }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">会計用月次レポートの請求書PDFに表示されます。</p>
+                        @error('invoice_preamble')
+                            <span class="field-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
                     <!-- 説明 -->
                     <div class="field-group">
                         <label for="description" class="field-label">説明</label>
