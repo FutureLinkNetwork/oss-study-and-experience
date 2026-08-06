@@ -73,6 +73,23 @@ class SubdomainUpdateTest extends TestCase
         $response->assertSee('自治体情報');
         $response->assertSee('自治体名');
         $response->assertSee('自治体名カナ');
+        $response->assertSee('請求書前文');
+    }
+
+    public function test_admin_can_update_invoice_preamble(): void
+    {
+        $preamble = 'テスト市条例第１条の規定に基づき、下記のとおり請求します。';
+
+        $response = $this->actingAs($this->adminUser)
+            ->put('http://itami.localhost/admin/subdomain', $this->validPayload([
+                'invoice_preamble' => $preamble,
+            ]));
+
+        $response->assertRedirect(route('admin.subdomain.edit'));
+        $response->assertSessionHas('success');
+
+        $this->subdomain->refresh();
+        $this->assertSame($preamble, $this->subdomain->invoice_preamble);
     }
 
     public function test_admin_can_update_name_and_name_kana(): void

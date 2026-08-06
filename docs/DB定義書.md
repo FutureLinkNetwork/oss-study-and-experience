@@ -46,6 +46,7 @@
 | 名前 | name | VARCHAR(255) | NO | - | 自治体名 |
 | 自治体名カナ | name_kana | VARCHAR(255) | YES | NULL | 全角カタカナ |
 | システム名 | system_name | VARCHAR(255) | YES | NULL | ページタイトル用 |
+| 請求書前文 | invoice_preamble | TEXT | YES | NULL | 会計用請求書PDFの前文 |
 | 説明 | description | VARCHAR(255) | YES | NULL | |
 | 有効フラグ | is_active | BOOLEAN | NO | true | |
 | 設定（JSON） | settings | JSON | YES | NULL | |

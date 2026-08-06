@@ -70,7 +70,7 @@ class AccountingInvoicePdfService
 
             $businessPageNum = 0;
             $this->addInvoicePage($pdf, $business, $subdomain, $targetMonthLabel, $reiwa, $totalAmount, $businessPageNum);
-            $this->addBreakdownPages($pdf, $business, $businessUsages, $targetMonthLabel, $businessPageNum);
+            $this->addBreakdownPages($pdf, $business, $subdomain, $businessUsages, $targetMonthLabel, $businessPageNum);
         }
 
         if ($pdf->PageNo() === 0) {
@@ -103,7 +103,7 @@ class AccountingInvoicePdfService
         $y += 12;
 
         $pdf->SetXY(20, $y);
-        $pdf->Write(0, '市長 様');
+        $pdf->Write(0, $this->mayorRecipientLabel($subdomain));
         $pdf->SetXY(110, $y);
         $pdf->Write(0, '（請求者）');
         $y += 8;
@@ -139,13 +139,14 @@ class AccountingInvoicePdfService
         $y += 20;
 
         $pageWidth = $pdf->getPageWidth();
-        $titleW = 80;
+        $invoiceTitle = $this->invoiceTitle($subdomain);
+        $titleW = $invoiceTitle !== '' ? $pdf->GetStringWidth($invoiceTitle) : 0;
         $titleX = ($pageWidth - $titleW) / 2;
         $pdf->SetXY($titleX, $y);
-        $pdf->Write(0, '子どもの習い事応援事業請求書');
+        $pdf->Write(0, $invoiceTitle);
         $y += 10;
         $pdf->SetXY(25, $y);
-        $pdf->Write(0, '子どもの習い事応援事業実施要綱第９条第２項の規定に基づき、下記のとおり請求します。');
+        $pdf->Write(0, $this->invoicePreamble($subdomain));
 
         $y += 20;
         $titleW = 10;
@@ -226,7 +227,7 @@ class AccountingInvoicePdfService
         $pdf->Cell(0, 8, "— {$pageNum} —", 0, 0, 'C');
     }
 
-    private function addBreakdownPages(Fpdi $pdf, BusinessInfo $business, \Illuminate\Support\Collection $usages, string $targetMonthLabel, int &$businessPageNum): void
+    private function addBreakdownPages(Fpdi $pdf, BusinessInfo $business, Subdomain $subdomain, \Illuminate\Support\Collection $usages, string $targetMonthLabel, int &$businessPageNum): void
     {
         $margin = 25;
         $pageWidth = $pdf->getPageWidth();
@@ -245,6 +246,7 @@ class AccountingInvoicePdfService
         $rows = $usages->all();
         $offset = 0;
         $businessName = $business->business_name ?? '';
+        $invoiceTitle = $this->invoiceTitle($subdomain);
 
         while ($offset < count($rows)) {
             $pdf->AddPage();
@@ -253,7 +255,7 @@ class AccountingInvoicePdfService
             $y = 15;
             $pdf->SetFont('kozgopromedium', '', 10);
             $pdf->SetXY($margin, $y);
-            $pdf->Write(0, '子どもの習い事応援事業請求書（内訳）'.($businessName !== '' ? '　'.$businessName : ''));
+            $pdf->Write(0, $invoiceTitle.'（内訳）'.($businessName !== '' ? '　'.$businessName : ''));
             $y += 10;
             $pdf->SetXY($margin, $y);
             $pdf->Write(0, "利用月 {$targetMonthLabel}");
@@ -290,6 +292,21 @@ class AccountingInvoicePdfService
                 $count++;
             }
         }
+    }
+
+    private function mayorRecipientLabel(Subdomain $subdomain): string
+    {
+        return $subdomain->name.'長 様';
+    }
+
+    private function invoiceTitle(Subdomain $subdomain): string
+    {
+        return (string) ($subdomain->system_name ?? '');
+    }
+
+    private function invoicePreamble(Subdomain $subdomain): string
+    {
+        return (string) ($subdomain->invoice_preamble ?? '');
     }
 
     private function formatBusinessAddress(BusinessInfo $business): string

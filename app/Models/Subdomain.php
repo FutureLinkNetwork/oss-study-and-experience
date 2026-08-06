@@ -21,6 +21,7 @@ class Subdomain extends Model
         'name',
         'name_kana',
         'system_name',
+        'invoice_preamble',
         'description',
         'voucher_amount',
         'voucher_expiry',
