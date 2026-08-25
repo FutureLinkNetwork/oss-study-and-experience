@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserApplicationReceivedMail;
 use App\Models\Subdomain;
 use App\Models\UserApplication;
 use App\Rules\RecaptchaV3;
+use App\Services\MailLogService;
 use App\Services\S3KeyPrefix;
 use App\Traits\HandlesAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class UserApplicationController extends Controller
 {
     use HandlesAuth;
+
+    public function __construct(
+        protected MailLogService $mailLogService
+    ) {}
 
     /**
      * 入力保持対象のフォーム項目キー
@@ -188,6 +195,28 @@ class UserApplicationController extends Controller
             // セッションデータをクリア
             session()->forget('uploaded_files');
             session()->forget('user_application.form_data');
+
+            $contactUrl = url('/contact');
+            $notifyEmail = (string) $userApplication->guardian_email;
+            if ($notifyEmail !== '' && filter_var($notifyEmail, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    $userApplication->refresh();
+                    $mailable = new UserApplicationReceivedMail($userApplication, $subdomain, $contactUrl);
+                    Mail::to($notifyEmail)->send($mailable);
+                    $this->mailLogService->logMail(
+                        $notifyEmail,
+                        (string) $mailable->envelope()->subject,
+                        $mailable->render()
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('利用者申請受付メール送信失敗', [
+                        'user_application_id' => $userApplication->id,
+                        'email' => $notifyEmail,
+                        'exception' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            }
 
             return redirect()->route('user_application.complete')
                 ->with('success', '利用者申請を受け付けました。');
