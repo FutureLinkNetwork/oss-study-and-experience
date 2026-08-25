@@ -283,7 +283,8 @@ class AccountingInvoicePdfService
                 $pdf->SetXY($margin, $y);
                 $pdf->Cell($colW['guardian'], $rowH, $this->truncate($guardianName, 10), 1, 0, 'L');
                 $pdf->Cell($colW['child'], $rowH, $this->truncate($childName, 8), 1, 0, 'L');
-                $pdf->Cell($colW['classroom'], $rowH, $this->truncate($classroomName, 12), 1, 0, 'L');
+                // $pdf->Cell($colW['classroom'], $rowH, $this->truncate($classroomName, 12), 1, 0, 'L');
+				$pdf->Cell($colW['classroom'], $rowH, $classroomName, 1, 0, 'L', false, '', '1');
                 $pdf->Cell($colW['month'], $rowH, $usedAt, 1, 0, 'C');
                 $pdf->Cell($colW['coupon'], $rowH, number_format($usage->amount), 1, 0, 'R');
                 $pdf->Ln();
