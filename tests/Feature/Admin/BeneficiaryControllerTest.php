@@ -106,6 +106,71 @@ class BeneficiaryControllerTest extends TestCase
     }
 
     /**
+     * 利用者詳細に資格喪失日の注意モーダルが含まれることをテスト
+     */
+    public function test_beneficiary_show_includes_disqualification_date_warning_modal(): void
+    {
+        $beneficiary = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'status' => '資格喪失予定',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get("http://test.localhost/admin/beneficiaries/{$beneficiary->id}");
+
+        $response->assertOk();
+        $response->assertSee('id="beneficiary-update-form"', false);
+        $response->assertSee('data-today="'.now()->toDateString().'"', false);
+        $response->assertSee('id="disqualification-date-warning-modal"', false);
+        $response->assertSee('資格喪失日の注意');
+        $response->assertSee('本日の資格喪失バッチ（毎日0:00実行）の対象になりません。');
+        $response->assertSee('このまま更新');
+        $response->assertSee('shouldWarnDisqualificationDate');
+        $response->assertSee("status.value === '資格喪失予定' && dateValue <= today", false);
+    }
+
+    /**
+     * 資格喪失予定かつ資格喪失日が当日以前でも、確認後は更新できることをテスト
+     */
+    public function test_beneficiary_can_be_updated_with_scheduled_disqualification_on_or_before_today(): void
+    {
+        $beneficiary = Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'status' => '資格喪失予定',
+            'disqualification_date' => null,
+        ]);
+
+        $updateData = [
+            'certification_number' => $beneficiary->certification_number,
+            'certification_date' => $beneficiary->certification_date?->format('Y-m-d') ?? '2024-01-01',
+            'status' => '資格喪失予定',
+            'disqualification_date' => now()->toDateString(),
+            'guardian_name' => $beneficiary->guardian_name,
+            'guardian_birth_date' => $beneficiary->guardian_birth_date?->format('Y-m-d') ?? '1980-01-01',
+            'guardian_address' => $beneficiary->guardian_address,
+            'guardian_phone' => $beneficiary->guardian_phone,
+            'guardian_email' => $beneficiary->guardian_email,
+            'child_name' => $beneficiary->child_name,
+            'child_birth_date' => $beneficiary->child_birth_date?->format('Y-m-d') ?? '2010-01-01',
+            'elementary_school_name' => $beneficiary->elementary_school_name,
+            'grade' => $beneficiary->grade,
+            'child_address' => $beneficiary->child_address,
+            'application_date' => $beneficiary->application_date?->format('Y-m-d') ?? '2024-01-01',
+        ];
+
+        $response = $this->actingAs($this->adminUser)
+            ->put("http://test.localhost/admin/beneficiaries/{$beneficiary->id}", $updateData);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('beneficiaries', [
+            'id' => $beneficiary->id,
+            'status' => '資格喪失予定',
+            'disqualification_date' => now()->toDateString(),
+        ]);
+    }
+
+    /**
      * 利用者情報が更新できることをテスト
      */
     public function test_beneficiary_can_be_updated(): void
