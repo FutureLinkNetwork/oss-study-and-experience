@@ -65,7 +65,10 @@
             @endif
 
             <!-- 利用者詳細編集フォーム -->
-            <form method="POST" action="{{ route('admin.beneficiaries.update', $beneficiary) }}">
+            <form id="beneficiary-update-form"
+                  method="POST"
+                  action="{{ route('admin.beneficiaries.update', $beneficiary) }}"
+                  data-today="{{ now()->toDateString() }}">
                 @csrf
                 @method('PUT')
                 <div class="bg-white shadow rounded-lg">
@@ -594,6 +597,48 @@
     </div>
 </div>
 
+<!-- 資格喪失日注意モーダル -->
+<div id="disqualification-date-warning-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="disqualification-date-warning-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/50 transition-opacity" style="z-index: 0;" aria-hidden="true" onclick="closeDisqualificationDateWarningModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style="z-index: 10;">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-start justify-between mb-4">
+                    <h3 id="disqualification-date-warning-title" class="text-lg leading-6 font-medium text-gray-900">資格喪失日の注意</h3>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeDisqualificationDateWarningModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-700 mb-3">
+                        ステータスが「資格喪失予定」のまま、資格喪失日を本日以前に設定すると、<span class="font-semibold">本日の資格喪失バッチ（毎日0:00実行）の対象になりません。</span>
+                    </p>
+                    <p class="text-sm text-gray-700 mb-3">
+                        資格喪失日は翌日以降を指定するか、直ちに資格喪失とする場合はステータスを「資格喪失」に変更してください。
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        このまま更新してもよろしいですか？
+                    </p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button"
+                        id="disqualification-date-warning-confirm"
+                        onclick="confirmDisqualificationDateWarning()"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    このまま更新
+                </button>
+                <button type="button"
+                        onclick="closeDisqualificationDateWarningModal()"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    キャンセル
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- クーポン付与確認モーダル -->
 <div id="issue-voucher-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -740,7 +785,54 @@ function closeExpireVoucherModal() {
     modal.classList.add('hidden');
 }
 
+function shouldWarnDisqualificationDate() {
+    const form = document.getElementById('beneficiary-update-form');
+    const status = document.getElementById('status');
+    const dateInput = document.getElementById('disqualification_date');
+    if (!form || !status || !dateInput) {
+        return false;
+    }
+
+    const dateValue = dateInput.value;
+    const today = form.dataset.today;
+    if (!dateValue || !today) {
+        return false;
+    }
+
+    return status.value === '資格喪失予定' && dateValue <= today;
+}
+
+function openDisqualificationDateWarningModal() {
+    const modal = document.getElementById('disqualification-date-warning-modal');
+    modal.classList.remove('hidden');
+}
+
+function closeDisqualificationDateWarningModal() {
+    const modal = document.getElementById('disqualification-date-warning-modal');
+    modal.classList.add('hidden');
+}
+
+function confirmDisqualificationDateWarning() {
+    const form = document.getElementById('beneficiary-update-form');
+    form.dataset.disqualificationWarningConfirmed = '1';
+    closeDisqualificationDateWarningModal();
+    form.submit();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const updateForm = document.getElementById('beneficiary-update-form');
+    if (updateForm) {
+        updateForm.addEventListener('submit', function (event) {
+            if (updateForm.dataset.disqualificationWarningConfirmed === '1') {
+                return;
+            }
+            if (shouldWarnDisqualificationDate()) {
+                event.preventDefault();
+                openDisqualificationDateWarningModal();
+            }
+        });
+    }
+
     const sendLoginInfoBtn = document.getElementById('send-login-info-btn');
     if (sendLoginInfoBtn) {
         sendLoginInfoBtn.addEventListener('click', function() {
