@@ -805,29 +805,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const useMapCheckbox = document.getElementById('use-map-checkbox');
     const useMapHidden = document.getElementById('use-map-hidden');
     const mapSection = document.querySelector('.classroom-map-section');
-    if (useMapCheckbox && useMapHidden && mapSection) {
-        useMapCheckbox.addEventListener('change', function() {
-            const useMap = !this.checked;
-            useMapHidden.value = useMap ? '1' : '0';
-            mapSection.style.display = useMap ? '' : 'none';
-            const latInput = document.getElementById('classroom_latitude');
-            const lngInput = document.getElementById('classroom_longitude');
-            if (!useMap && latInput && lngInput) {
-                latInput.value = '';
-                lngInput.value = '';
-            }
-        });
-    }
-
     const mapContainer = document.getElementById('classroom-map');
-    if (!mapContainer || (mapSection && mapSection.style.display === 'none')) {
-        return;
-    }
+    let classroomMap = null;
 
-    // 既存の緯度経度値を取得
-    const latInput = document.getElementById('classroom_latitude');
-    const lngInput = document.getElementById('classroom_longitude');
-    
     @php
         $isEdit = !is_null($classroom);
         if ($isEdit) {
@@ -840,43 +820,78 @@ document.addEventListener('DOMContentLoaded', function() {
         $defaultLat = $latitude ?? 35.6812;
         $defaultLng = $longitude ?? 139.7671;
     @endphp
-    
+
     const classroomLat = @json($classroomLat);
     const classroomLng = @json($classroomLng);
     const defaultLat = {{ $defaultLat }};
     const defaultLng = {{ $defaultLng }};
     const isEdit = {{ $isEdit ? 'true' : 'false' }};
-    
-    // 初期座標を決定
-    let initialLat, initialLng, showMarker;
-    
-    if (isEdit && classroomLat !== null && classroomLng !== null) {
-        // 編集時：教室の座標がある場合はそれを使用してマーカーを表示
-        initialLat = parseFloat(classroomLat);
-        initialLng = parseFloat(classroomLng);
-        showMarker = true;
-    } else {
-        // 新規登録時、または編集時でも座標がない場合：subdomainの座標を使用（マーカーなし）
-        initialLat = latInput && latInput.value ? parseFloat(latInput.value) : defaultLat;
-        initialLng = lngInput && lngInput.value ? parseFloat(lngInput.value) : defaultLng;
-        showMarker = false;
+
+    function ensureClassroomMap() {
+        if (!mapContainer) {
+            return;
+        }
+
+        if (classroomMap) {
+            classroomMap.invalidateSize();
+            return;
+        }
+
+        const latInput = document.getElementById('classroom_latitude');
+        const lngInput = document.getElementById('classroom_longitude');
+
+        let initialLat;
+        let initialLng;
+        let showMarker;
+
+        if (isEdit && classroomLat !== null && classroomLng !== null) {
+            initialLat = parseFloat(classroomLat);
+            initialLng = parseFloat(classroomLng);
+            showMarker = true;
+        } else {
+            initialLat = latInput && latInput.value ? parseFloat(latInput.value) : defaultLat;
+            initialLng = lngInput && lngInput.value ? parseFloat(lngInput.value) : defaultLng;
+            showMarker = false;
+        }
+
+        classroomMap = initMap({
+            containerId: 'classroom-map',
+            latitude: initialLat,
+            longitude: initialLng,
+            zoom: 17,
+            showMarker: showMarker,
+            enableClick: true,
+            scrollWheelZoom: false,
+            touchZoom: false,
+            onClick: function(lat, lng) {
+                setClassroomMapCoordinates(lat, lng);
+            }
+        });
+
+        if (classroomMap) {
+            classroomMap.invalidateSize();
+        }
     }
 
-    // map.jsを使用して地図を初期化
-    const map = initMap({
-        containerId: 'classroom-map',
-        latitude: initialLat,
-        longitude: initialLng,
-        zoom: 17,
-        showMarker: showMarker,
-        enableClick: true, // クリックイベントを有効化
-		scrollWheelZoom: false,
-		touchZoom: false,
-        onClick: function(lat, lng, marker, map) {
-            // 緯度経度をフィールドにセット
-            setClassroomMapCoordinates(lat, lng);
-        }
-    });
+    if (useMapCheckbox && useMapHidden && mapSection) {
+        useMapCheckbox.addEventListener('change', function() {
+            const useMap = !this.checked;
+            useMapHidden.value = useMap ? '1' : '0';
+            mapSection.style.display = useMap ? '' : 'none';
+            const latInput = document.getElementById('classroom_latitude');
+            const lngInput = document.getElementById('classroom_longitude');
+            if (useMap) {
+                ensureClassroomMap();
+            } else if (latInput && lngInput) {
+                latInput.value = '';
+                lngInput.value = '';
+            }
+        });
+    }
+
+    if (mapContainer && !(mapSection && mapSection.style.display === 'none')) {
+        ensureClassroomMap();
+    }
 });
 </script>
 @endpush
