@@ -67,7 +67,9 @@ class BeneficiaryController extends Controller
         }
 
         $query = $this->buildIndexQuery($request, $subdomain);
-        $beneficiaries = $query->orderBy('beneficiaries.id', 'desc')->paginate(20);
+        $beneficiaries = $query->orderBy('beneficiaries.id', 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
         // リクエストパラメータをビューに渡す（絞り込み条件の保持用）
         $filters = $request->only([

@@ -78,7 +78,8 @@ class UserApplicationController extends Controller
 
         // 申請日の新しい順でソート
         $userApplications = $query->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // リクエストパラメータをビューに渡す（絞り込み条件の保持用）
         $filters = $request->only([
