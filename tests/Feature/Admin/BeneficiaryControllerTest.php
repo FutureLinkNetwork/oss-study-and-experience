@@ -245,6 +245,55 @@ class BeneficiaryControllerTest extends TestCase
     }
 
     /**
+     * 検索結果が20件を超えるとき、ページングリンクと2ページ目でも絞り込み条件を保持する
+     */
+    public function test_beneficiaries_index_pagination_preserves_search_filters(): void
+    {
+        Beneficiary::factory()->count(21)->create([
+            'subdomain_id' => $this->subdomain->id,
+            'guardian_name' => '検索対象保護者',
+            'status' => '決定通知書未送信',
+        ]);
+
+        Beneficiary::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'guardian_name' => '対象外保護者',
+            'child_name' => '対象外児童XYZ',
+            'status' => '資格喪失',
+        ]);
+
+        $indexResponse = $this->actingAs($this->adminUser)
+            ->get('http://test.localhost/admin/beneficiaries?'.http_build_query([
+                'guardian_name' => '検索対象保護者',
+                'status' => '決定通知書未送信',
+            ]));
+
+        $indexResponse->assertOk();
+        $indexResponse->assertSee('page=2');
+        $indexResponse->assertSee('guardian_name='.urlencode('検索対象保護者'));
+        $indexResponse->assertSee('status='.urlencode('決定通知書未送信'));
+        $indexResponse->assertDontSee('対象外児童XYZ');
+
+        $pageTwoResponse = $this->actingAs($this->adminUser)
+            ->get('http://test.localhost/admin/beneficiaries?'.http_build_query([
+                'guardian_name' => '検索対象保護者',
+                'status' => '決定通知書未送信',
+                'page' => 2,
+            ]));
+
+        $pageTwoResponse->assertOk();
+        $pageTwoResponse->assertSee('検索対象保護者');
+        $pageTwoResponse->assertSee('value="検索対象保護者"', false);
+        $pageTwoResponse->assertSee('決定通知書未送信', false);
+        $pageTwoResponse->assertDontSee('対象外児童XYZ');
+
+        $beneficiaries = $pageTwoResponse->viewData('beneficiaries');
+        $this->assertSame(21, $beneficiaries->total());
+        $this->assertSame(2, $beneficiaries->currentPage());
+        $this->assertCount(1, $beneficiaries->items());
+    }
+
+    /**
      * メール一括送信（送信待ち登録）が動作することをテスト
      */
     public function test_send_bulk_login_info_marks_beneficiaries_as_pending(): void

@@ -140,6 +140,54 @@ class UserApplicationControllerTest extends TestCase
         $response->assertDontSee('対象内');
     }
 
+    /**
+     * 検索結果が20件を超えるとき、ページングリンクと2ページ目でも絞り込み条件を保持する
+     */
+    public function test_user_applications_index_pagination_preserves_search_filters(): void
+    {
+        UserApplication::factory()->count(21)->create([
+            'subdomain_id' => $this->subdomain->id,
+            'child_name' => '検索対象児童',
+            'is_exported' => false,
+        ]);
+
+        UserApplication::factory()->create([
+            'subdomain_id' => $this->subdomain->id,
+            'child_name' => '対象外児童XYZ',
+            'is_exported' => true,
+        ]);
+
+        $indexResponse = $this->actingAs($this->adminUser)
+            ->get('http://test.localhost/admin/user-applications?'.http_build_query([
+                'child_name' => '検索対象児童',
+                'is_exported' => '0',
+            ]));
+
+        $indexResponse->assertOk();
+        $indexResponse->assertSee('page=2');
+        $indexResponse->assertSee('child_name='.urlencode('検索対象児童'));
+        $indexResponse->assertSee('is_exported=0');
+        $indexResponse->assertDontSee('対象外児童XYZ');
+
+        $pageTwoResponse = $this->actingAs($this->adminUser)
+            ->get('http://test.localhost/admin/user-applications?'.http_build_query([
+                'child_name' => '検索対象児童',
+                'is_exported' => '0',
+                'page' => 2,
+            ]));
+
+        $pageTwoResponse->assertOk();
+        $pageTwoResponse->assertSee('検索対象児童');
+        $pageTwoResponse->assertSee('value="検索対象児童"', false);
+        $pageTwoResponse->assertSee('value="0" selected', false);
+        $pageTwoResponse->assertDontSee('対象外児童XYZ');
+
+        $userApplications = $pageTwoResponse->viewData('userApplications');
+        $this->assertSame(21, $userApplications->total());
+        $this->assertSame(2, $userApplications->currentPage());
+        $this->assertCount(1, $userApplications->items());
+    }
+
     public function test_index_hides_csv_button_when_filter_is_excluded(): void
     {
         $response = $this->actingAs($this->adminUser)
