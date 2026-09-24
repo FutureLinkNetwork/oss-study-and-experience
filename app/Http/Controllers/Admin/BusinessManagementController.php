@@ -15,6 +15,7 @@ use App\Services\ImageProcessingService;
 use App\Services\MailLogService;
 use App\Services\S3KeyPrefix;
 use App\Services\SubdomainService;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -663,8 +664,9 @@ class BusinessManagementController extends Controller
         // 最新のデータを取得するため、モデルをリフレッシュ
         $classroom->refresh();
 
-        // 関連するコース情報も取得
-        $classroom->load('courses');
+        $classroom->load(['courses' => function (HasMany $query): void {
+            $query->orderBy('id');
+        }]);
 
         // 習い事種別データを取得（現在のサブドメインのもの）
         $subdomain = $this->subdomainService->getCurrentSubdomain($request);
