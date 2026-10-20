@@ -27,7 +27,7 @@ class CourseController extends Controller
         // 事業者に属するコース一覧を取得（教室情報も含む）
         $courses = $businessInfo->courses()
             ->with('classroomInfo')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id')
             ->paginate(10);
 
         return view('business.courses.index', compact('businessInfo', 'courses'));

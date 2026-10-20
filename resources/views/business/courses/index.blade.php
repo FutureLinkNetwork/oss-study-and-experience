@@ -47,7 +47,7 @@
 
                 @if($courses->count() > 0)
                     <div class="overflow-hidden">
-                        <table class="min-w-full divide-y divide-gray-200">
+                        <table id="course-list-table" class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -65,6 +65,15 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         状態
                                     </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" aria-sort="none">
+                                        <button type="button"
+                                                data-course-updated-sort
+                                                data-sort-direction=""
+                                                class="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700">
+                                            更新日時
+                                            <i class="fas fa-sort" data-sort-icon aria-hidden="true"></i>
+                                        </button>
+                                    </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         操作
                                     </th>
@@ -72,7 +81,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($courses as $course)
-                                    <tr class="hover:bg-gray-50">
+                                    <tr class="hover:bg-gray-50" data-updated-at="{{ $course->updated_at?->getTimestamp() ?? '' }}">
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ $course->course_name }}
@@ -128,6 +137,13 @@
                                                 <span class="label-base label-inactive label-xs">
                                                     <i class="fas fa-times-circle mr-1"></i>無効
                                                 </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            @if($course->updated_at)
+                                                {{ $course->updated_at->timezone(config('app.timezone'))->format('y/m/d H:i') }}
+                                            @else
+                                                -
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-sm font-medium">
@@ -214,3 +230,59 @@
 </script>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const courseListTable = document.getElementById('course-list-table');
+    const courseUpdatedSortButton = courseListTable?.querySelector('[data-course-updated-sort]');
+    const courseListBody = courseListTable?.querySelector('tbody');
+    if (!courseUpdatedSortButton || !courseListBody) {
+        return;
+    }
+
+    courseUpdatedSortButton.addEventListener('click', function () {
+        const nextDirection = courseUpdatedSortButton.getAttribute('data-sort-direction') === 'desc' ? 'asc' : 'desc';
+        const rows = Array.from(courseListBody.querySelectorAll('tr'));
+
+        rows.sort(function (left, right) {
+            const leftValue = left.getAttribute('data-updated-at') ?? '';
+            const rightValue = right.getAttribute('data-updated-at') ?? '';
+            const leftMissing = leftValue === '';
+            const rightMissing = rightValue === '';
+
+            if (leftMissing && rightMissing) {
+                return 0;
+            }
+            if (leftMissing) {
+                return 1;
+            }
+            if (rightMissing) {
+                return -1;
+            }
+
+            const leftTime = Number(leftValue);
+            const rightTime = Number(rightValue);
+            if (leftTime === rightTime) {
+                return 0;
+            }
+
+            return nextDirection === 'desc' ? rightTime - leftTime : leftTime - rightTime;
+        });
+
+        rows.forEach(function (row) {
+            courseListBody.appendChild(row);
+        });
+
+        courseUpdatedSortButton.setAttribute('data-sort-direction', nextDirection);
+        courseUpdatedSortButton.closest('th')?.setAttribute('aria-sort', nextDirection === 'desc' ? 'descending' : 'ascending');
+
+        const sortIcon = courseUpdatedSortButton.querySelector('[data-sort-icon]');
+        if (sortIcon) {
+            sortIcon.classList.remove('fa-sort', 'fa-sort-up', 'fa-sort-down');
+            sortIcon.classList.add(nextDirection === 'desc' ? 'fa-sort-down' : 'fa-sort-up');
+        }
+    });
+});
+</script>
+@endpush
