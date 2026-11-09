@@ -14,7 +14,7 @@ class CourseController extends Controller
     /**
      * コース一覧を表示
      */
-    public function index()
+    public function index(Request $request)
     {
         // ログインユーザーの事業者情報を取得
         $businessInfo = $this->getUserBusinessInfo();
@@ -24,13 +24,21 @@ class CourseController extends Controller
                 ->with('error', '事業者情報が見つかりません。');
         }
 
-        // 事業者に属するコース一覧を取得（教室情報も含む）
-        $courses = $businessInfo->courses()
-            ->with('classroomInfo')
-            ->orderBy('id')
-            ->paginate(10);
+        $updatedAtDirection = $this->updatedAtSortDirection($request);
+        $coursesQuery = $businessInfo->courses()->with('classroomInfo');
 
-        return view('business.courses.index', compact('businessInfo', 'courses'));
+        if ($updatedAtDirection === null) {
+            $coursesQuery->orderBy('id');
+        } else {
+            $coursesQuery
+                ->orderByRaw('updated_at IS NULL')
+                ->orderBy('updated_at', $updatedAtDirection)
+                ->orderBy('id');
+        }
+
+        $courses = $coursesQuery->paginate(10)->withQueryString();
+
+        return view('business.courses.index', compact('businessInfo', 'courses', 'updatedAtDirection'));
     }
 
     /**
@@ -240,6 +248,20 @@ class CourseController extends Controller
         }
 
         return redirect()->route('business.courses.create', ['source' => $course->id]);
+    }
+
+    /**
+     * 更新日時ソートの方向を返す。指定がなければ初期表示のID順。
+     */
+    private function updatedAtSortDirection(Request $request): ?string
+    {
+        if ($request->query('sort') !== 'updated_at') {
+            return null;
+        }
+
+        $direction = $request->query('direction');
+
+        return in_array($direction, ['asc', 'desc'], true) ? $direction : null;
     }
 
     /**
