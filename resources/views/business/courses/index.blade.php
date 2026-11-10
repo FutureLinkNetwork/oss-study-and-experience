@@ -65,14 +65,12 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         状態
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" aria-sort="none">
-                                        <button type="button"
-                                                data-course-updated-sort
-                                                data-sort-direction=""
-                                                class="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" aria-sort="{{ $updatedAtDirection === 'desc' ? 'descending' : ($updatedAtDirection === 'asc' ? 'ascending' : 'none') }}">
+                                        <a href="{{ route('business.courses.index', ['sort' => 'updated_at', 'direction' => $updatedAtDirection === 'desc' ? 'asc' : 'desc']) }}"
+                                           class="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700">
                                             更新日時
-                                            <i class="fas fa-sort" data-sort-icon aria-hidden="true"></i>
-                                        </button>
+                                            <i class="fas {{ $updatedAtDirection === 'desc' ? 'fa-sort-down' : ($updatedAtDirection === 'asc' ? 'fa-sort-up' : 'fa-sort') }}" aria-hidden="true"></i>
+                                        </a>
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         操作
@@ -81,7 +79,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($courses as $course)
-                                    <tr class="hover:bg-gray-50" data-updated-at="{{ $course->updated_at?->getTimestamp() ?? '' }}">
+                                    <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ $course->course_name }}
@@ -230,59 +228,3 @@
 </script>
 @endif
 @endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const courseListTable = document.getElementById('course-list-table');
-    const courseUpdatedSortButton = courseListTable?.querySelector('[data-course-updated-sort]');
-    const courseListBody = courseListTable?.querySelector('tbody');
-    if (!courseUpdatedSortButton || !courseListBody) {
-        return;
-    }
-
-    courseUpdatedSortButton.addEventListener('click', function () {
-        const nextDirection = courseUpdatedSortButton.getAttribute('data-sort-direction') === 'desc' ? 'asc' : 'desc';
-        const rows = Array.from(courseListBody.querySelectorAll('tr'));
-
-        rows.sort(function (left, right) {
-            const leftValue = left.getAttribute('data-updated-at') ?? '';
-            const rightValue = right.getAttribute('data-updated-at') ?? '';
-            const leftMissing = leftValue === '';
-            const rightMissing = rightValue === '';
-
-            if (leftMissing && rightMissing) {
-                return 0;
-            }
-            if (leftMissing) {
-                return 1;
-            }
-            if (rightMissing) {
-                return -1;
-            }
-
-            const leftTime = Number(leftValue);
-            const rightTime = Number(rightValue);
-            if (leftTime === rightTime) {
-                return 0;
-            }
-
-            return nextDirection === 'desc' ? rightTime - leftTime : leftTime - rightTime;
-        });
-
-        rows.forEach(function (row) {
-            courseListBody.appendChild(row);
-        });
-
-        courseUpdatedSortButton.setAttribute('data-sort-direction', nextDirection);
-        courseUpdatedSortButton.closest('th')?.setAttribute('aria-sort', nextDirection === 'desc' ? 'descending' : 'ascending');
-
-        const sortIcon = courseUpdatedSortButton.querySelector('[data-sort-icon]');
-        if (sortIcon) {
-            sortIcon.classList.remove('fa-sort', 'fa-sort-up', 'fa-sort-down');
-            sortIcon.classList.add(nextDirection === 'desc' ? 'fa-sort-down' : 'fa-sort-up');
-        }
-    });
-});
-</script>
-@endpush
