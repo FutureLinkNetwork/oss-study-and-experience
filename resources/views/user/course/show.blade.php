@@ -94,7 +94,7 @@
                             @endif
                         </dl>
                     </div>
-					@if($classroom->allowsAmountSpecifiedUsage())
+					@if($classroom->allowsAmountSpecifiedUsage() && !($isDisqualifiedBeneficiary ?? false))
 					<div class="text-center mb-4">
 						@if($qrOnly && !$qrAccess)
 							<button type="button" class="btn-base btn-disable btn-s" disabled title="この教室はQRコードからのアクセスが必要です">金額指定利用</button>
@@ -138,6 +138,7 @@
                                                     </dd>
                                                 </div>
                                             </dl>
+                                            @if(!($isDisqualifiedBeneficiary ?? false))
                                             <div class="mt-4 flex flex-wrap gap-2" onclick="event.stopPropagation()">
                                                 @if($qrOnly && !$qrAccess)
                                                     <button type="button" class="btn-base btn-disable btn-s" disabled title="この教室はQRコードからのアクセスが必要です">申し込み</button>
@@ -145,6 +146,7 @@
                                                     <a href="{{ route('user.course.application', ['classroom' => $classroom->id, 'course' => $course->id]) }}" class="btn-base btn-create btn-s">申し込み</a>
                                                 @endif
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach

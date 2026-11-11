@@ -77,7 +77,10 @@ class VoucherApplicationController extends Controller
 
         // 再度申し込み可能かチェック
         $canReapply = false;
-        if ($voucherUsage->courseInfo) {
+        $isDisqualified = $user instanceof User && $user->beneficiary?->isDisqualified() === true;
+        if ($isDisqualified) {
+            $canReapply = false;
+        } elseif ($voucherUsage->courseInfo) {
             // コースがある場合：コースが有効かつクーポン残高が十分かチェック
             $course = $voucherUsage->courseInfo;
             $isCourseValid = $this->isCourseValid($course);

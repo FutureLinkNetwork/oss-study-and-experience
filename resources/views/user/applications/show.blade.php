@@ -94,16 +94,18 @@
                             <i class="fas fa-arrow-left mr-2"></i>戻る
                         </a>
 
-                        <!-- 再度申し込むボタン（条件を満たさない場合は無効表示） -->
-                        @if($canReapply)
-                            <a href="{{ route('user.course.application', ['classroom' => $voucherUsage->classroom_info_id, 'course' => $voucherUsage->courseInfo ? $voucherUsage->course_info_id : -1]) }}" 
-							class="btn-base btn-create btn-m">
-                                <i class="fas fa-redo mr-2"></i>再度申し込む
-                            </a>
-                        @else
-                            <span class="btn-base btn-create btn-m opacity-50 cursor-not-allowed pointer-events-none" aria-disabled="true">
-                                <i class="fas fa-redo mr-2"></i>再度申し込む
-                            </span>
+                        <!-- 再申込（資格喪失時は非表示。条件を満たさない場合は無効表示） -->
+                        @if(!($isDisqualifiedBeneficiary ?? false))
+                            @if($canReapply)
+                                <a href="{{ route('user.course.application', ['classroom' => $voucherUsage->classroom_info_id, 'course' => $voucherUsage->courseInfo ? $voucherUsage->course_info_id : -1]) }}" 
+                                class="btn-base btn-create btn-m">
+                                    <i class="fas fa-redo mr-2"></i>再度申し込む
+                                </a>
+                            @else
+                                <span class="btn-base btn-create btn-m opacity-50 cursor-not-allowed pointer-events-none" aria-disabled="true">
+                                    <i class="fas fa-redo mr-2"></i>再度申し込む
+                                </span>
+                            @endif
                         @endif
 
                         <!-- キャンセルボタン（条件を満たす場合のみ表示） -->
