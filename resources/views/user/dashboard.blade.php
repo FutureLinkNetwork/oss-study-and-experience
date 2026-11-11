@@ -60,7 +60,7 @@
                             </div>
                             <div class="ml-4">
                                 <h4 class="text-lg font-medium text-gray-900">クーポン利用履歴</h4>
-                                <p class="text-sm text-gray-500">{{ ($isDisqualifiedBeneficiary ?? false) ? '過去の利用履歴を確認できます' : '履歴から繰り返しクーポンを利用できます' }}</p>
+                                <p class="text-sm text-gray-500">履歴から繰り返しクーポンを利用できます</p>
                             </div>
                         </div>
                         <div class="mt-4">
