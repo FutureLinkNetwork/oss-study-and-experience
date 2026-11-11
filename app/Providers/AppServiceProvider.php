@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Subdomain;
-use App\Models\User;
 use App\Support\UserCouponBalanceCalculator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
@@ -43,18 +42,9 @@ class AppServiceProvider extends ServiceProvider
 
                     $view->with('subdomain', $subdomain);
 
-                    $authUser = Auth::user();
-                    $isDisqualifiedBeneficiary = $authUser instanceof User
-                        && $authUser->role
-                        && $authUser->role->name === 'subdomain_user'
-                        && $authUser->beneficiary?->isDisqualified() === true;
-
-                    $view->with('isDisqualifiedBeneficiary', $isDisqualifiedBeneficiary);
-
                     // 利用者（subdomain_user）の場合のみクーポン残高と有効期限を計算
-                    // 資格喪失後はヘッダーに残高・有効期限を出さない
-                    if ($authUser instanceof User && $authUser->role && $authUser->role->name === 'subdomain_user' && ! $isDisqualifiedBeneficiary) {
-                        $voucherInfo = $this->calculateAvailableBalanceAndExpiry($authUser, $subdomain);
+                    if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'subdomain_user') {
+                        $voucherInfo = $this->calculateAvailableBalanceAndExpiry(Auth::user(), $subdomain);
                         $view->with('voucherBalance', $voucherInfo['balance']);
                         $view->with('voucherExpiryDate', $voucherInfo['expiry_date']);
                     } else {
@@ -67,7 +57,6 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('subdomain', null);
                 $view->with('voucherBalance', null);
                 $view->with('voucherExpiryDate', null);
-                $view->with('isDisqualifiedBeneficiary', false);
             }
         });
     }

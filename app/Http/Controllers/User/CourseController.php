@@ -14,7 +14,6 @@ use App\Services\ImmediateCouponAppliedNotificationService;
 use App\Services\SubdomainService;
 use App\Support\UserCouponBalanceCalculator;
 use App\Traits\HandlesAuth;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -325,10 +324,6 @@ class CourseController extends Controller
             abort(403);
         }
 
-        if ($redirect = $this->redirectIfDisqualified($user, (int) $classroom)) {
-            return $redirect;
-        }
-
         // 教室情報を取得
         $classroomId = (int) $classroom;
         $classroom = ClassroomInfo::find($classroomId);
@@ -404,10 +399,6 @@ class CourseController extends Controller
         $user = Auth::user();
         if (! $user) {
             abort(403);
-        }
-
-        if ($redirect = $this->redirectIfDisqualified($user, (int) $classroom)) {
-            return $redirect;
         }
 
         // 教室情報を取得
@@ -534,26 +525,6 @@ class CourseController extends Controller
                 ->with('error', '申し込み処理中にエラーが発生しました。もう一度お試しください。')
                 ->withInput();
         }
-    }
-
-    /**
-     * 資格喪失の利用者はクーポン申込画面へ進めない。
-     */
-    private function redirectIfDisqualified(mixed $user, int $classroomId): ?RedirectResponse
-    {
-        if (! $user instanceof User) {
-            return null;
-        }
-
-        $user->loadMissing('beneficiary');
-
-        if ($user->beneficiary?->isDisqualified() !== true) {
-            return null;
-        }
-
-        return redirect()
-            ->route('user.course.show', $classroomId)
-            ->with('error', '資格を喪失しているため、クーポンを利用できません。');
     }
 
     /**
