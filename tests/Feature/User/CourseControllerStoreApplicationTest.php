@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\Subdomain;
 use App\Models\User;
 use App\Models\Voucher;
+use App\Models\VoucherUsage;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -57,6 +58,7 @@ class CourseControllerStoreApplicationTest extends TestCase
             'display_name' => '利用者太郎',
             'email' => 'user@example.com',
             'is_active' => true,
+            'last_login_at' => now(),
         ]);
 
         $beneficiary = Beneficiary::factory()->create([
@@ -319,5 +321,112 @@ class CourseControllerStoreApplicationTest extends TestCase
             'amount' => 500,
             'is_cancelled' => false,
         ]);
+    }
+
+    /**
+     * ログイン認証済みの利用者はコース申込ができ、教室詳細に申込ボタンと残高が表示されること
+     */
+    public function test_authenticated_beneficiary_can_apply_and_sees_coupon_actions(): void
+    {
+        Mail::fake();
+        $this->user->update(['last_login_at' => now()]);
+        $this->user->beneficiary->update(['status' => 'ログイン認証済み']);
+
+        $showUrl = 'http://itami.localhost/user/course/'.$this->classroom->id;
+        $showResponse = $this->actingAs($this->user)->get($showUrl);
+
+        $showResponse->assertOk();
+        $showResponse->assertSee('金額指定利用');
+        $showResponse->assertSee('申し込み');
+        $showResponse->assertSee('クーポン残高');
+        $showResponse->assertSee('有効期限');
+
+        $url = 'http://itami.localhost/user/course/'.$this->classroom->id.'/'.$this->course->id.'/application';
+        $response = $this->actingAs($this->user)->post($url, ['memo' => '']);
+
+        $response->assertRedirect(route('user.course.show', $this->classroom->id));
+        $response->assertSessionHas('success', 'クーポンでの申し込みが完了しました。');
+        $this->assertDatabaseHas('voucher_usages', [
+            'user_id' => $this->user->id,
+            'course_info_id' => $this->course->id,
+        ]);
+    }
+
+    /**
+     * 資格喪失の利用者には申込ボタンとヘッダーの残高・有効期限を出さないこと
+     */
+    public function test_disqualified_beneficiary_does_not_see_coupon_actions_or_balance(): void
+    {
+        $this->user->update(['last_login_at' => now()]);
+        $this->user->beneficiary->update(['status' => '資格喪失']);
+
+        $showUrl = 'http://itami.localhost/user/course/'.$this->classroom->id;
+        $showResponse = $this->actingAs($this->user)->get($showUrl);
+
+        $showResponse->assertOk();
+        $showResponse->assertDontSee('金額指定利用');
+        $showResponse->assertDontSee('申し込み');
+        $showResponse->assertDontSee('クーポン残高');
+        $showResponse->assertDontSee('有効期限');
+
+        $dashboardResponse = $this->actingAs($this->user)->get('http://itami.localhost/user');
+        $dashboardResponse->assertOk();
+        $dashboardResponse->assertSee('過去の利用履歴を確認できます');
+        $dashboardResponse->assertDontSee('履歴から繰り返しクーポンを利用できます');
+        $dashboardResponse->assertDontSee('クーポン残高');
+    }
+
+    /**
+     * 資格喪失の利用者は申込画面のGETとPOSTを拒否され、利用記録が作られないこと
+     */
+    public function test_disqualified_beneficiary_cannot_open_or_store_application(): void
+    {
+        $this->user->update(['last_login_at' => now()]);
+        $this->user->beneficiary->update(['status' => '資格喪失']);
+
+        $courseUrl = 'http://itami.localhost/user/course/'.$this->classroom->id.'/'.$this->course->id.'/application';
+        $getResponse = $this->actingAs($this->user)->get($courseUrl);
+        $getResponse->assertRedirect(route('user.course.show', $this->classroom->id));
+        $getResponse->assertSessionHas('error', '資格を喪失しているため、クーポンを利用できません。');
+
+        $postResponse = $this->actingAs($this->user)->post($courseUrl, ['memo' => '']);
+        $postResponse->assertRedirect(route('user.course.show', $this->classroom->id));
+        $postResponse->assertSessionHas('error', '資格を喪失しているため、クーポンを利用できません。');
+
+        $amountUrl = 'http://itami.localhost/user/course/'.$this->classroom->id.'/-1/application';
+        $amountResponse = $this->actingAs($this->user)->post($amountUrl, [
+            'amount' => 500,
+            'memo' => '',
+        ]);
+        $amountResponse->assertRedirect(route('user.course.show', $this->classroom->id));
+        $amountResponse->assertSessionHas('error', '資格を喪失しているため、クーポンを利用できません。');
+
+        $this->assertDatabaseCount('voucher_usages', 0);
+    }
+
+    /**
+     * 資格喪失の利用者の利用履歴詳細に再度申し込むを出さないこと
+     */
+    public function test_disqualified_beneficiary_does_not_see_reapply_link(): void
+    {
+        $this->user->update(['last_login_at' => now()]);
+        $this->user->beneficiary->update(['status' => '資格喪失']);
+
+        $usage = VoucherUsage::create([
+            'user_id' => $this->user->id,
+            'subdomain_id' => $this->subdomain->id,
+            'business_info_id' => $this->business->id,
+            'classroom_info_id' => $this->classroom->id,
+            'course_info_id' => $this->course->id,
+            'amount' => 1000,
+            'used_at' => now()->subHour(),
+            'is_cancelled' => false,
+            'qr_flag' => false,
+        ]);
+
+        $response = $this->actingAs($this->user)->get('http://itami.localhost/user/applications/'.$usage->id);
+
+        $response->assertOk();
+        $response->assertDontSee('再度申し込む');
     }
 }
